@@ -21,11 +21,17 @@ package swaydb.kotlin
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.Assert.assertThat
 import org.junit.Test
+import swaydb.serializers.Default
 
 class SerializerTest {
 
     @Test
     fun constructor() {
         assertThat(Serializer.classToType(String::class.java), notNullValue())
+    }
+
+    @Test
+    fun constructor2() {
+        assertThat(Serializer.classToType(Default.`IntSerializer$`.`MODULE$`), notNullValue())
     }
 }
