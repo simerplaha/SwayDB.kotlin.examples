@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with SwayDB. If not, see <https://www.gnu.org/licenses/>.
 */
-package swaydb.kotlin;
+package swaydb.kotlin
 
 import java.util.HashMap
 import swaydb.serializers.Default
