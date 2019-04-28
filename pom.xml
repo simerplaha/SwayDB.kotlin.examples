@@ -5,8 +5,8 @@
     <artifactId>swaydb-kotlin</artifactId>
     <packaging>jar</packaging>
     <version>0.8.0</version>
-    <name>swaydb-java</name>
-    <description>Java wrapper for SwayDB</description>
+    <name>swaydb-kotlin</name>
+    <description>Kotlin wrapper for SwayDB</description>
     <url>https://github.com/simerplaha/SwayDB.kotlin</url>
     <developers>
         <developer>
