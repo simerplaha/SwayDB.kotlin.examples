@@ -18,6 +18,7 @@
 */
 package swaydb.memory
 
+import scala.Option
 import scala.Some
 import scala.Tuple2
 import scala.collection.JavaConverters
@@ -34,6 +35,9 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
+import swaydb.data.accelerate.Accelerator
+import swaydb.data.api.grouping.KeyValueGroupingStrategy
+
 
 class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeable {
     private val database: swaydb.Map<K, V, IO<*>>
@@ -46,7 +50,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return database.asScala().size()
     }
 
-    fun iEmpty(): Boolean {
+    fun isEmpty(): Boolean {
         return database.isEmpty().get() as Boolean
     }
 
@@ -309,6 +313,93 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         database.closeDatabase().get()
     }
 
+    class Builder<K, V> {
+
+        private var mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, V>()
+        private var segmentSize = `Map$`.`MODULE$`.`apply$default$2`<K, V>()
+        private var cacheSize = `Map$`.`MODULE$`.`apply$default$3`<K, V>()
+        private var cacheCheckDelay = `Map$`.`MODULE$`.`apply$default$4`<K, V>()
+        private var bloomFilterFalsePositiveRate = `Map$`.`MODULE$`.`apply$default$5`<K, V>()
+        private var compressDuplicateValues = `Map$`.`MODULE$`.`apply$default$6`<K, V>()
+        private var deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, V>()
+        private var groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, V>()
+        private var acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, V>() as scala.Function1<Level0Meter, Accelerator>
+        private var keySerializer: Any? = null
+        private var valueSerializer: Any? = null
+
+        fun withMapSize(mapSize: Int): Builder<K, V> {
+            this.mapSize = mapSize
+            return this
+        }
+
+        fun withSegmentSize(segmentSize: Int): Builder<K, V> {
+            this.segmentSize = segmentSize
+            return this
+        }
+
+        fun withCacheSize(cacheSize: Int): Builder<K, V> {
+            this.cacheSize = cacheSize
+            return this
+        }
+
+        fun withCacheCheckDelay(cacheCheckDelay: FiniteDuration): Builder<K, V> {
+            this.cacheCheckDelay = cacheCheckDelay
+            return this
+        }
+
+        fun withBloomFilterFalsePositiveRate(bloomFilterFalsePositiveRate: Double): Builder<K, V> {
+            this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate
+            return this
+        }
+
+        fun withCompressDuplicateValues(compressDuplicateValues: Boolean): Builder<K, V> {
+            this.compressDuplicateValues = compressDuplicateValues
+            return this
+        }
+
+        fun withDeleteSegmentsEventually(deleteSegmentsEventually: Boolean): Builder<K, V> {
+            this.deleteSegmentsEventually = deleteSegmentsEventually
+            return this
+        }
+
+        fun withGroupingStrategy(groupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K, V> {
+            this.groupingStrategy = groupingStrategy
+            return this
+        }
+
+        fun withAcceleration(acceleration: scala.Function1<Level0Meter, Accelerator>): Builder<K, V> {
+            this.acceleration = acceleration
+            return this
+        }
+
+        fun withKeySerializer(keySerializer: Any): Builder<K, V> {
+            this.keySerializer = keySerializer
+            return this
+        }
+
+        fun withValueSerializer(valueSerializer: Any): Builder<K, V> {
+            this.valueSerializer = valueSerializer
+            return this
+        }
+
+        fun build(): swaydb.memory.Map<K, V> {
+            val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, V>(mapSize, segmentSize,
+                    cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
+                    deleteSegmentsEventually, groupingStrategy, acceleration)
+            val ec = `Map$`.`MODULE$`.`apply$default$13`<K, V>(mapSize, segmentSize, cacheSize,
+                    cacheCheckDelay, bloomFilterFalsePositiveRate,
+                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
+            return Map(
+                    `Map$`.`MODULE$`.apply<K, V>(mapSize, segmentSize, cacheSize,
+                            cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
+                            deleteSegmentsEventually, groupingStrategy, acceleration,
+                            Serializer.classToType(keySerializer) as swaydb.serializers.Serializer<K>,
+                            Serializer.classToType(valueSerializer) as swaydb.serializers.Serializer<V>,
+                            keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>)
+        }
+    }
+
+
     companion object {
         fun <K, V> create(keySerializer: Any, valueSerializer: Any): Map<K, V> {
             val mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, V>()
@@ -331,6 +422,10 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
                             cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
                             deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
                             Serializer.classToType(valueSerializer), keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>)
+        }
+
+        fun <K, V> builder(): Builder<K, V> {
+            return Builder<K, V>()
         }
     }
 }

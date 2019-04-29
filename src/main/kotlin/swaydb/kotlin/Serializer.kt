@@ -36,7 +36,7 @@ object Serializer {
         CLASS_TO_TYPE.put(Double::class.java, Default.`DoubleSerializer$`.`MODULE$`)
     }
 
-    fun classToType(clazz:Any):swaydb.serializers.Serializer<*> {
+    fun classToType(clazz:Any?):swaydb.serializers.Serializer<*> {
         if (clazz is swaydb.serializers.Serializer<*>) {
             return clazz
         }
