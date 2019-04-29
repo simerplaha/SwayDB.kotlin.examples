@@ -56,9 +56,11 @@ class QuickStartMemoryMapTest {
             @Suppress("UNCHECKED_CAST")
             db.commit(
                     swaydb.kotlin.Prepare.put(2, "two value"),
+                    swaydb.kotlin.Prepare.put(3, "three value", 1000, TimeUnit.MILLISECONDS),
                     swaydb.kotlin.Prepare.remove(1) as Prepare<Int, String>
             )
             assertThat(db.get(2), equalTo("two value"));
+            assertThat(db.get(3), equalTo("three value"));
             assertThat(db.get(1), nullValue());
 
             // write 100 key-values atomically

@@ -18,12 +18,20 @@
  */
 package swaydb.kotlin
 
+import scala.Option
 import scala.concurrent.duration.Deadline
+import scala.concurrent.duration.FiniteDuration
+import java.util.concurrent.TimeUnit
 
 object Prepare {
 
     fun <K, V> put(key: K, value: V): swaydb.Prepare.Put<K, V> {
-        return swaydb.Prepare.Put<K, V>(key, value, scala.Option.empty<Deadline>())
+        return swaydb.Prepare.Put<K, V>(key, value, Option.empty<Deadline>())
+    }
+
+    fun <K, V> put(key: K, value: V, expireAfter: Long, timeUnit: TimeUnit): swaydb.Prepare.Put<K, V> {
+        return swaydb.Prepare.Put<K, V>(key, value, Option.apply(
+                FiniteDuration.create(expireAfter, timeUnit).fromNow()))
     }
 
     fun <K> remove(key: K): swaydb.Prepare.Remove<K> {
