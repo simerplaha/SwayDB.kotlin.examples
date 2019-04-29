@@ -30,9 +30,6 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.IntStream
-import java.util.concurrent.Callable
-import com.sun.jndi.ldap.LdapPoolManager.expire
-
 
 class QuickStartMemoryMapTest {
 
