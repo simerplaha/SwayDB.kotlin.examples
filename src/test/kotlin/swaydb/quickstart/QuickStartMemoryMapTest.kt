@@ -148,7 +148,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisHead() {
+    fun memoryMapIntStringHead() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -163,7 +163,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisKeysHead() {
+    fun memoryMapIntStringKeysHead() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -178,7 +178,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisKeysLast() {
+    fun memoryMapIntStringKeysLast() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -194,7 +194,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisLast() {
+    fun memoryMapIntStringLast() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -239,7 +239,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisKeySet() {
+    fun memoryMapIntStringKeySet() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -251,7 +251,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisValues() {
+    fun memoryMapIntStringValues() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -263,7 +263,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisEntrySet() {
+    fun memoryMapIntStringEntrySet() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
