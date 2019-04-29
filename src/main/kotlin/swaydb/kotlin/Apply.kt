@@ -28,16 +28,19 @@ object Apply {
         return swaydb.Apply.`Update$`.`MODULE$`.apply(value)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <V> expire(expireAt: LocalDateTime): swaydb.Apply.Map<V> {
-        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).getNano()
+        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         return swaydb.Apply.`Expire$`.`MODULE$`.apply(
                 FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()) as swaydb.Apply.Map<V>
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <V> remove(): swaydb.Apply.Map<V> {
         return swaydb.Apply.`Remove$`.`MODULE$` as swaydb.Apply.Map<V>
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <V> nothing(): swaydb.Apply.Map<V> {
         return swaydb.Apply.`Nothing$`.`MODULE$` as swaydb.Apply.Map<V>
     }

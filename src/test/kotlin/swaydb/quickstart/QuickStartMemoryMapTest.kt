@@ -299,7 +299,7 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1200, TimeUnit.MILLISECONDS).until {
+                    await().atMost(1800, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
                     }
@@ -463,7 +463,7 @@ class QuickStartMemoryMapTest {
                     likesMap.put("SwayDB", 0)
 
                     val likesFunctionId = likesMap.registerFunction(
-                            "increment likes counts", { likesCount: Int -> Apply.update(likesCount + 1) })
+                            "increment likes counts") { likesCount: Int -> Apply.update(likesCount + 1) }
                     IntStream.rangeClosed(1, 100).forEach { _ -> likesMap.applyFunction("SwayDB", likesFunctionId) }
                     assertThat(likesMap.get("SwayDB"), equalTo(100))
                 }
@@ -479,7 +479,7 @@ class QuickStartMemoryMapTest {
                     likesMap.put("SwayDB", 0)
 
                     val likesFunctionId = likesMap.registerFunction(
-                            "expire likes counts") { _: Int ->
+                            "expire likes counts") {
                         Apply.expire(
                                 LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     }
@@ -502,7 +502,7 @@ class QuickStartMemoryMapTest {
                     likesMap.put("SwayDB", 0)
 
                     val likesFunctionId = likesMap.registerFunction(
-                            "remove likes counts") { _: Int -> Apply.remove() }
+                            "remove likes counts") { Apply.remove() }
                     likesMap.applyFunction("SwayDB", likesFunctionId)
                     assertThat<Int>(likesMap.get("SwayDB"), equalTo(null))
                 }
@@ -518,7 +518,7 @@ class QuickStartMemoryMapTest {
                     likesMap.put("SwayDB", 0)
 
                     val likesFunctionId = likesMap.registerFunction(
-                            "nothing likes counts") { _: Int -> Apply.nothing() }
+                            "nothing likes counts") { Apply.nothing() }
                     likesMap.applyFunction("SwayDB", likesFunctionId)
                     assertThat(likesMap.get("SwayDB"), equalTo(0))
                 }

@@ -27,14 +27,14 @@ object Serializer {
     private val CLASS_TO_TYPE = HashMap<KClass<*>, swaydb.serializers.Serializer<*>>()
 
     init {
-        CLASS_TO_TYPE.put(Int::class, Default.`IntSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(String::class, Default.`StringSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(Long::class, Default.`LongSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(Char::class, Default.`CharSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(Float::class, Default.`FloatSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(Short::class, Default.`ShortSerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(ByteArray::class, Default.`ArraySerializer$`.`MODULE$`)
-        CLASS_TO_TYPE.put(Double::class, Default.`DoubleSerializer$`.`MODULE$`)
+        CLASS_TO_TYPE[Int::class] = Default.`IntSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[String::class] = Default.`StringSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[Long::class] = Default.`LongSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[Char::class] = Default.`CharSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[Float::class] = Default.`FloatSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[Short::class] = Default.`ShortSerializer$`.`MODULE$`
+        CLASS_TO_TYPE[ByteArray::class] = Default.`ArraySerializer$`.`MODULE$`
+        CLASS_TO_TYPE[Double::class] = Default.`DoubleSerializer$`.`MODULE$`
     }
 
     fun classToType(clazz:Any?):swaydb.serializers.Serializer<*> {

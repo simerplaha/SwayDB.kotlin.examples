@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit
 object Prepare {
 
     fun <K, V> put(key: K, value: V): swaydb.Prepare.Put<K, V> {
-        return swaydb.Prepare.Put<K, V>(key, value, Option.empty<Deadline>())
+        return swaydb.Prepare.Put(key, value, Option.empty<Deadline>())
     }
 
     fun <K, V> put(key: K, value: V, expireAfter: Long, timeUnit: TimeUnit): swaydb.Prepare.Put<K, V> {
-        return swaydb.Prepare.Put<K, V>(key, value, Option.apply(
+        return swaydb.Prepare.Put(key, value, Option.apply(
                 FiniteDuration.create(expireAfter, timeUnit).fromNow()))
     }
 
