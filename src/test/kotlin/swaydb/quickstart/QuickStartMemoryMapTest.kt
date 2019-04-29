@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit
 
 class QuickStartMemoryMapTest {
 
-    @Suppress("UNCHECKED_CAST")
     @Test
     fun memoryMapIntStringFrom() {
         // Create a memory database
@@ -52,6 +51,7 @@ class QuickStartMemoryMapTest {
                     // db.put(1, "one value").get
                     db.put(1, "one value")
 
+            @Suppress("UNCHECKED_CAST")
             db.commit(
                     swaydb.kotlin.Prepare.put(2, "two value"),
                     swaydb.kotlin.Prepare.remove(1) as Prepare<Int, String>
@@ -63,7 +63,7 @@ class QuickStartMemoryMapTest {
             db.put((1..100)
                     .map { index -> AbstractMap.SimpleEntry<Int, String>(index, index.toString()) }
                     .map { it.key to it.value + "_updated" }
-                    .toMap().toMutableMap())
+                    .toMap())
             // assert the key-values were updated
             (1..100)
                     .map { item -> AbstractMap.SimpleEntry<Int, String>(item, db.get(item)) }

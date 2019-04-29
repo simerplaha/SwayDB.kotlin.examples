@@ -40,9 +40,6 @@ import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.Prepare
 import java.util.Arrays
 
-
-
-
 class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeable {
     private val database: swaydb.Map<K, V, IO<*>> = database
 
@@ -139,7 +136,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return values().contains(value)
     }
 
-    fun put(map: MutableMap<K, V>) {
+    fun put(map: kotlin.collections.Map<K, V>) {
         val entries = JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.put(entries.toSet()).get()
     }
@@ -148,7 +145,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         database.put(seq)
     }
 
-    fun update(map: MutableMap<K, V>) {
+    fun update(map: kotlin.collections.Map<K, V>) {
         val entries = JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.update(entries.toSet()).get()
     }
@@ -280,7 +277,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         database.remove(from, to).get()
     }
 
-    fun asJava(): MutableMap<K, V>? {
+    fun asJava(): kotlin.collections.Map<K, V>? {
         return JavaConverters.mapAsJavaMapConverter(database.asScala()).asJava()
     }
 
