@@ -17,21 +17,21 @@ class QuickStartMemoryMapTest {
         // Create a memory database
         // val db = memory.Map[Int, String]().get
         swaydb.memory.Map.create<Int, String>(
-                Int::class, String::class).use({ db ->
-            // db.put(1, "one").get
-            db.put(1, "one")
-            // db.get(1).get
-            val result = db.get(1)
-            assertThat("result contains value", result, notNullValue())
-            assertThat("Key 1 is present", db.containsKey(1), equalTo(true))
-            assertThat(result, equalTo("one"))
-            // db.remove(1).get
-            db.remove(1)
-            val result2 = db.get(1)
-            assertThat("Empty result", result2, nullValue())
-            // db.put(1, "one value").get
-            db.put(1, "one value")
-        })
+                Int::class, String::class).use { db ->
+                    // db.put(1, "one").get
+                    db.put(1, "one")
+                    // db.get(1).get
+                    val result = db.get(1)
+                    assertThat("result contains value", result, notNullValue())
+                    assertThat("Key 1 is present", db.containsKey(1), equalTo(true))
+                    assertThat(result, equalTo("one"))
+                    // db.remove(1).get
+                    db.remove(1)
+                    val result2 = db.get(1)
+                    assertThat("Empty result", result2, nullValue())
+                    // db.put(1, "one value").get
+                    db.put(1, "one value")
+                }
     }
 
     @Test
@@ -389,7 +389,7 @@ class QuickStartMemoryMapTest {
                 .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
-                    assertThat(db.asJava()?.size, equalTo(1))
+                    assertThat(db.size(), equalTo(1))
                 }
     }
 
@@ -403,11 +403,11 @@ class QuickStartMemoryMapTest {
                     db.put(1, "one")
                     db.put(2, "two")
                     db.remove(1, 2)
-                    assertThat(db.asJava()?.size, equalTo(0))
+                    assertThat(db.size(), equalTo(0))
                     db.put(3, "three")
                     db.put(4, "four")
                     db.remove(HashSet<Int>(Arrays.asList<Int>(3, 4)))
-                    assertThat(db.asJava()?.size, equalTo(0))
+                    assertThat(db.size(), equalTo(0))
                 }
     }
 
