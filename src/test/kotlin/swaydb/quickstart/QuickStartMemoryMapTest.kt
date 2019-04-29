@@ -24,10 +24,15 @@ import org.junit.Assert.assertThat
 import org.junit.Test
 import swaydb.Prepare
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
+import swaydb.kotlin.Apply
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.stream.IntStream
+import java.util.concurrent.Callable
+import com.sun.jndi.ldap.LdapPoolManager.expire
+
 
 class QuickStartMemoryMapTest {
 
@@ -37,19 +42,19 @@ class QuickStartMemoryMapTest {
         // val db = memory.Map[Int, String]().get
         swaydb.memory.Map.create<Int, String>(
                 Int::class, String::class).use { db ->
-                    // db.put(1, "one").get
-                    db.put(1, "one")
-                    // db.get(1).get
-                    val result = db.get(1)
-                    assertThat("result contains value", result, notNullValue())
-                    assertThat("Key 1 is present", db.containsKey(1), equalTo(true))
-                    assertThat(result, equalTo("one"))
-                    // db.remove(1).get
-                    db.remove(1)
-                    val result2 = db.get(1)
-                    assertThat("Empty result", result2, nullValue())
-                    // db.put(1, "one value").get
-                    db.put(1, "one value")
+            // db.put(1, "one").get
+            db.put(1, "one")
+            // db.get(1).get
+            val result = db.get(1)
+            assertThat("result contains value", result, notNullValue())
+            assertThat("Key 1 is present", db.containsKey(1), equalTo(true))
+            assertThat(result, equalTo("one"))
+            // db.remove(1).get
+            db.remove(1)
+            val result2 = db.get(1)
+            assertThat("Empty result", result2, nullValue())
+            // db.put(1, "one value").get
+            db.put(1, "one value")
 
             @Suppress("UNCHECKED_CAST")
             db.commit(
@@ -424,9 +429,10 @@ class QuickStartMemoryMapTest {
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
-                .build().use { db->
+                .build().use { db ->
                     db.put(1, "one")
-                    assertThat(db.asJava()?.size, equalTo(1)) }
+                    assertThat(db.asJava()?.size, equalTo(1))
+                }
     }
 
     @Test
@@ -446,6 +452,79 @@ class QuickStartMemoryMapTest {
                     assertThat(db.size(), equalTo(0))
                 }
     }
+
+    @Test
+    fun memoryMapStringIntRegisterApplyFunctionUpdate() {
+        swaydb.memory.Map
+                .builder<String, Int>()
+                .withKeySerializer(String::class)
+                .withValueSerializer(Int::class)
+                .build().use { likesMap ->
+                    // initial entry with 0 likes.
+                    likesMap.put("SwayDB", 0)
+
+                    val likesFunctionId = likesMap.registerFunction(
+                            "increment likes counts", { likesCount: Int -> Apply.update(likesCount + 1) })
+                    IntStream.rangeClosed(1, 100).forEach { _ -> likesMap.applyFunction("SwayDB", likesFunctionId) }
+                    assertThat(likesMap.get("SwayDB"), equalTo(100))
+                }
+    }
+
+    @Test
+    fun memoryMapStringIntRegisterApplyFunctionExpire() {
+        swaydb.memory.Map
+                .builder<String, Int>()
+                .withKeySerializer(String::class)
+                .withValueSerializer(Int::class)
+                .build().use { likesMap ->
+                    likesMap.put("SwayDB", 0)
+
+                    val likesFunctionId = likesMap.registerFunction(
+                            "expire likes counts") { _: Int ->
+                        Apply.expire(
+                                LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
+                    }
+                    likesMap.applyFunction("SwayDB", likesFunctionId)
+                    assertThat(likesMap.get("SwayDB"), equalTo(0))
+                    await().atMost(1200, TimeUnit.MILLISECONDS).until {
+                        assertThat(likesMap.get("SwayDB"), nullValue())
+                        true
+                    }
+                }
+    }
+
+    @Test
+    fun memoryMapStringIntRegisterApplyFunctionRemove() {
+        swaydb.memory.Map
+                .builder<String, Int>()
+                .withKeySerializer(String::class)
+                .withValueSerializer(Int::class)
+                .build().use { likesMap ->
+                    likesMap.put("SwayDB", 0)
+
+                    val likesFunctionId = likesMap.registerFunction(
+                            "remove likes counts") { _: Int -> Apply.remove() }
+                    likesMap.applyFunction("SwayDB", likesFunctionId)
+                    assertThat<Int>(likesMap.get("SwayDB"), equalTo(null))
+                }
+    }
+
+    @Test
+    fun memoryMapStringIntRegisterApplyFunctionNothing() {
+        swaydb.memory.Map
+                .builder<String, Int>()
+                .withKeySerializer(String::class)
+                .withValueSerializer(Int::class)
+                .build().use { likesMap ->
+                    likesMap.put("SwayDB", 0)
+
+                    val likesFunctionId = likesMap.registerFunction(
+                            "nothing likes counts") { _: Int -> Apply.nothing() }
+                    likesMap.applyFunction("SwayDB", likesFunctionId)
+                    assertThat(likesMap.get("SwayDB"), equalTo(0))
+                }
+    }
+
 
     @Test
     fun memoryMapIntStringFromBuilder() {

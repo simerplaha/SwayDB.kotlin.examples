@@ -281,10 +281,10 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return JavaConverters.mapAsJavaMapConverter(database.asScala()).asJava()
     }
 
-    fun registerFunction(functionId: K, function: java.util.function.Function<V, Apply.Map<V>>): K {
+    fun registerFunction(functionId: K, function: (V) -> Apply.Map<V>): K {
         return database.registerFunction(functionId, object : AbstractFunction1<V, Apply.Map<V>>() {
             override fun apply(value: V): Apply.Map<V> {
-                return function.apply(value)
+                return function(value)
             }
         }) as K
     }
