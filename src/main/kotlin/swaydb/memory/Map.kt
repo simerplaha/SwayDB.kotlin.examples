@@ -37,6 +37,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import swaydb.data.accelerate.Accelerator
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
+import swaydb.Prepare
+import java.util.Arrays
+
+
 
 
 class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeable {
@@ -128,7 +132,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
     }
 
     fun lastOption(): Optional<MutableMap.MutableEntry<K, V>> {
-        return Optional.ofNullable<MutableMap.MutableEntry<K, V>>(last())
+        return Optional.ofNullable(last())
     }
 
     fun containsValue(value: V): Boolean {
@@ -310,6 +314,12 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
 
     override fun close() {
         database.closeDatabase().get()
+    }
+
+    fun commit(vararg prepares: Prepare<K, V>): Level0Meter {
+        val preparesList = Arrays.asList(*prepares)
+        val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
+        return database.commit(prepareIterator).get() as Level0Meter
     }
 
     class Builder<K, V> {

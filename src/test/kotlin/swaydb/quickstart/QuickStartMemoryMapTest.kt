@@ -22,6 +22,7 @@ import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
+import swaydb.Prepare
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit
 
 class QuickStartMemoryMapTest {
 
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun memoryMapIntStringFrom() {
         // Create a memory database
@@ -49,7 +51,24 @@ class QuickStartMemoryMapTest {
                     assertThat("Empty result", result2, nullValue())
                     // db.put(1, "one value").get
                     db.put(1, "one value")
-                }
+
+            db.commit(
+                    swaydb.kotlin.Prepare.put(2, "two value"),
+                    swaydb.kotlin.Prepare.remove(1) as Prepare<Int, String>
+            )
+            assertThat(db.get(2), equalTo("two value"));
+            assertThat(db.get(1), nullValue());
+
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> AbstractMap.SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value + "_updated" }
+                    .toMap().toMutableMap())
+            // assert the key-values were updated
+            (1..100)
+                    .map { item -> AbstractMap.SimpleEntry<Int, String>(item, db.get(item)) }
+                    .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+        }
     }
 
     @Test
@@ -101,7 +120,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisContainsValue() {
+    fun memoryMapIntStringContainsValue() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -113,7 +132,7 @@ class QuickStartMemoryMapTest {
     }
 
     @Test
-    fun memoryMapIntStringisMightContain() {
+    fun memoryMapIntStringMightContain() {
         swaydb.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
@@ -260,10 +279,10 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", 100, TimeUnit.MILLISECONDS)
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1600, TimeUnit.MILLISECONDS).until({
+                    await().atMost(1600, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
-                    })
+                    }
                 }
     }
 
@@ -276,10 +295,10 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1200, TimeUnit.MILLISECONDS).until({
+                    await().atMost(1200, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
-                    })
+                    }
                 }
     }
 
@@ -307,7 +326,7 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     val expireAt = LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100))
                     db.put(1, "one", expireAt)
-                    assertThat(db.timeLeft(1)?.getSeconds(), equalTo(0L))
+                    assertThat(db.timeLeft(1)?.seconds, equalTo(0L))
                     assertThat(db.timeLeft(2), nullValue())
                 }
     }
@@ -362,10 +381,10 @@ class QuickStartMemoryMapTest {
                     db.put(1, "one")
                     db.expire(1, 100, TimeUnit.MILLISECONDS)
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1800, TimeUnit.MILLISECONDS).until({
+                    await().atMost(1800, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
-                    })
+                    }
                 }
     }
 
@@ -379,10 +398,10 @@ class QuickStartMemoryMapTest {
                     db.put(1, "one")
                     db.expire(1, LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1800, TimeUnit.MILLISECONDS).until({
+                    await().atMost(1800, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
-                    })
+                    }
                 }
     }
 
@@ -423,7 +442,7 @@ class QuickStartMemoryMapTest {
                     assertThat(db.size(), equalTo(0))
                     db.put(3, "three")
                     db.put(4, "four")
-                    db.remove(HashSet<Int>(Arrays.asList<Int>(3, 4)))
+                    db.remove(HashSet(Arrays.asList(3, 4)))
                     assertThat(db.size(), equalTo(0))
                 }
     }
