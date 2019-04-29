@@ -389,11 +389,10 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
                     cacheCheckDelay, bloomFilterFalsePositiveRate,
                     compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
             return Map(
-                    `Map$`.`MODULE$`.apply<K, V>(mapSize, segmentSize, cacheSize,
+                    `Map$`.`MODULE$`.apply(mapSize, segmentSize, cacheSize,
                             cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
                             deleteSegmentsEventually, groupingStrategy, acceleration,
-                            Serializer.classToType(keySerializer) as swaydb.serializers.Serializer<K>,
-                            Serializer.classToType(valueSerializer) as swaydb.serializers.Serializer<V>,
+                            Serializer.classToType(keySerializer), Serializer.classToType(valueSerializer),
                             keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>)
         }
     }
@@ -416,7 +415,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
             val ec = `Map$`.`MODULE$`.`apply$default$13`<K, V>(mapSize, segmentSize, cacheSize,
                     cacheCheckDelay, bloomFilterFalsePositiveRate,
                     compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
-            return Map<K, V>(
+            return Map(
                     `Map$`.`MODULE$`.apply(mapSize, segmentSize, cacheSize,
                             cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
                             deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
@@ -424,7 +423,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         }
 
         fun <K, V> builder(): Builder<K, V> {
-            return Builder<K, V>()
+            return Builder()
         }
     }
 }
