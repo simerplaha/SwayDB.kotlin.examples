@@ -26,12 +26,8 @@ import swaydb.serializers.Default
 class SerializerTest {
 
     @Test
-    fun constructor() {
-        assertThat(Serializer.classToType(String::class.java), notNullValue())
-    }
-
-    @Test
-    fun constructor2() {
+    fun classToType() {
+        assertThat(Serializer.classToType(String::class), notNullValue())
         assertThat(Serializer.classToType(Default.`IntSerializer$`.`MODULE$`), notNullValue())
     }
 }

@@ -17,7 +17,7 @@ class QuickStartMemoryMapTest {
         // Create a memory database
         // val db = memory.Map[Int, String]().get
         swaydb.memory.Map.create<Int, String>(
-                Int::class.java, String::class.java).use({ db ->
+                Int::class, String::class).use({ db ->
             // db.put(1, "one").get
             db.put(1, "one")
             // db.get(1).get
@@ -39,8 +39,8 @@ class QuickStartMemoryMapTest {
         // Create a memory database
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     // db.put(1, "one").get
                     db.put(1, "one")
@@ -59,8 +59,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringSize() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     assertThat(db.size(), equalTo(0))
                     db.put(1, "one")
@@ -74,8 +74,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringIsEmpty() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     assertThat(db.isEmpty(), equalTo(true))
                     assertThat(db.nonEmpty(), equalTo(false))
@@ -86,8 +86,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisContainsValue() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.containsValue("one"), equalTo(true))
@@ -98,8 +98,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisMightContain() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.mightContain(1), equalTo(true))
@@ -110,8 +110,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisHead() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.head().toString(), equalTo("1=one"))
@@ -125,8 +125,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisKeysHead() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.keysHead().toString(), equalTo("1"))
@@ -140,8 +140,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisKeysLast() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.put(2, "two")
@@ -156,8 +156,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisLast() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.put(2, "two")
@@ -172,8 +172,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringPutMap() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     val data = LinkedHashMap<Int, String>()
                     data[1] = "one"
@@ -186,8 +186,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringUpdateMap() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "zerro")
                     val data = LinkedHashMap<Int, String>()
@@ -201,8 +201,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisKeySet() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.keySet().toString(), equalTo("[1]"))
@@ -213,8 +213,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisValues() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.values().toString(), equalTo("[one]"))
@@ -225,8 +225,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringisEntrySet() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
@@ -237,8 +237,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringPutExpireAfter() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one", 100, TimeUnit.MILLISECONDS)
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
@@ -253,8 +253,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringPutExpireAt() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
@@ -269,8 +269,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringExpiration() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     val expireAt = LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100))
                     db.put(1, "one", expireAt)
@@ -284,8 +284,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringTimeLeft() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     val expireAt = LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100))
                     db.put(1, "one", expireAt)
@@ -298,8 +298,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringKeySize() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.keySize(1), equalTo(4))
@@ -310,8 +310,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringValueSize() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.valueSize("one"), equalTo(3))
@@ -322,8 +322,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringSizes() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.sizeOfSegments(), equalTo(0L))
@@ -338,8 +338,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringExpireAfter() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.expire(1, 100, TimeUnit.MILLISECONDS)
@@ -355,8 +355,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringExpireAt() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.expire(1, LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
@@ -372,8 +372,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringUpdate() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.update(1, "one+1")
@@ -385,8 +385,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringAsJava() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     assertThat(db.asJava()?.size, equalTo(1))
@@ -397,8 +397,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringRemove() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
                     db.put(2, "two")
@@ -415,8 +415,8 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringFromBuilder() {
         swaydb.memory.Map
                 .builder<Int, String>()
-                .withKeySerializer(Int::class.java)
-                .withValueSerializer(String::class.java)
+                .withKeySerializer(Int::class)
+                .withValueSerializer(String::class)
                 .withMapSize(4000000)
                 .withSegmentSize(2000000)
                 .withCacheSize(100000000)
