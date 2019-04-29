@@ -40,18 +40,14 @@ import swaydb.data.api.grouping.KeyValueGroupingStrategy
 
 
 class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeable {
-    private val database: swaydb.Map<K, V, IO<*>>
-
-    init {
-        this.database = database
-    }
+    private val database: swaydb.Map<K, V, IO<*>> = database
 
     fun size(): Int {
         return database.asScala().size()
     }
 
     fun isEmpty(): Boolean {
-        return database.isEmpty().get() as Boolean
+        return database.isEmpty.get() as Boolean
     }
 
     fun nonEmpty(): Boolean {
@@ -98,7 +94,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
 
     fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
         val levelMeter = database.levelMeter(levelNumber)
-        return if (levelMeter.isEmpty()) Optional.empty<LevelMeter>() else Optional.ofNullable(levelMeter.get())
+        return if (levelMeter.isEmpty) Optional.empty<LevelMeter>() else Optional.ofNullable(levelMeter.get())
     }
 
     fun containsKey(key: K): Boolean {
@@ -119,7 +115,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
     }
 
     fun headOption(): Optional<MutableMap.MutableEntry<K, V>> {
-        return Optional.ofNullable<MutableMap.MutableEntry<K, V>>(head())
+        return Optional.ofNullable(head())
     }
 
     fun last(): MutableMap.MutableEntry<K, V>? {
@@ -169,6 +165,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return result
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun keysHead(): K? {
         val result = database.keys().headOption().get()
         if (result is Some<*>) {
@@ -181,6 +178,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return Optional.ofNullable<K>(keysHead())
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun keysLast(): K? {
         val result = database.keys().lastOption().get()
         if (result is Some<*>) {
@@ -231,7 +229,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
 
     fun put(key: K, value: V, expireAt: LocalDateTime): V? {
         val oldValue = get(key)
-        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).getNano()
+        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         database.put(key, value, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
         return oldValue
     }
@@ -255,6 +253,7 @@ class Map<K, V> private constructor(database: swaydb.Map<K, V, IO<*>>) : Closeab
         return oldValue
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun get(key: K): V? {
         val result = database.get(key).get()
         if (result is Some<*>) {
