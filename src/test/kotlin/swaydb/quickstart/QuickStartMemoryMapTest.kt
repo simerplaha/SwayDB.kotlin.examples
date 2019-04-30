@@ -310,7 +310,7 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", 100, TimeUnit.MILLISECONDS)
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1600, TimeUnit.MILLISECONDS).until {
+                    await().atMost(1800, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
                     }
@@ -326,7 +326,7 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(1800, TimeUnit.MILLISECONDS).until {
+                    await().atMost(2400, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
                     }
