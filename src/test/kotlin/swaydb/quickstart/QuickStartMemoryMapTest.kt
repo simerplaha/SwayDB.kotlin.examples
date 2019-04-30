@@ -29,10 +29,12 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.stream.IntStream
+import scala.collection.mutable.ListBuffer
+import scala.runtime.AbstractFunction1
 
 class QuickStartMemoryMapTest {
 
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun memoryMapIntStringFrom() {
         // Create a memory database
@@ -59,17 +61,42 @@ class QuickStartMemoryMapTest {
                     swaydb.kotlin.Prepare.put(3, "three value", 1000, TimeUnit.MILLISECONDS),
                     swaydb.kotlin.Prepare.remove(1) as Prepare<Int, String>
             )
-            assertThat(db.get(2), equalTo("two value"));
-            assertThat(db.get(3), equalTo("three value"));
-            assertThat(db.get(1), nullValue());
+            assertThat(db.get(2), equalTo("two value"))
+            assertThat(db.get(3), equalTo("three value"))
+            assertThat(db.get(1), nullValue())
 
             // write 100 key-values atomically
             db.put((1..100)
                     .map { index -> AbstractMap.SimpleEntry<Int, String>(index, index.toString()) }
-                    .map { it.key to it.value + "_updated" }
+                    .map { it.key to it.value }
                     .toMap())
+
+            // Iteration: fetch all key-values withing range 10 to 90, update values
+            // and atomically write updated key-values
+            (db
+                    .from(10)
+                    .takeWhile(object: AbstractFunction1<scala.Tuple2<Int, String>, Any>() {
+                        override fun apply(t1: scala.Tuple2<Int, String>): Any {
+                            return t1._1() as Int <= 90
+                        }
+                    })
+                    .map(object: AbstractFunction1<scala.Tuple2<Int, String>, Any>() {
+                        override fun apply(t1: scala.Tuple2<Int, String>): Any {
+                            val key = t1._1() as Int
+                            val value = t1._2() as String
+                            return scala.Tuple2.apply(key, value + "_updated")
+                        }
+                    })
+                    .materialize() as swaydb.data.IO.Success<ListBuffer<*>>)
+                    .foreach(object : AbstractFunction1<ListBuffer<*>, Any>() {
+                        override fun apply(t1: ListBuffer<*>): Any? {
+                            db.put(t1.seq())
+                            return null
+                        }
+            })
+
             // assert the key-values were updated
-            (1..100)
+            (10..90)
                     .map { item -> AbstractMap.SimpleEntry<Int, String>(item, db.get(item)) }
                     .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
         }
@@ -464,7 +491,7 @@ class QuickStartMemoryMapTest {
 
                     val likesFunctionId = likesMap.registerFunction(
                             "increment likes counts") { likesCount: Int -> Apply.update(likesCount + 1) }
-                    IntStream.rangeClosed(1, 100).forEach { _ -> likesMap.applyFunction("SwayDB", likesFunctionId) }
+                    (1 .. 100).forEach { _ -> likesMap.applyFunction("SwayDB", likesFunctionId) }
                     assertThat(likesMap.get("SwayDB"), equalTo(100))
                 }
     }

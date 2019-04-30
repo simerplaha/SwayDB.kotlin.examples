@@ -142,8 +142,9 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         database.put(entries.toSet()).get()
     }
 
-    fun put(seq: scala.collection.Seq<Tuple2<K, V>>) {
-        database.put(seq)
+    @Suppress("UNCHECKED_CAST")
+    fun put(seq: scala.collection.Seq<*>) {
+        database.put(seq as scala.collection.Seq<Tuple2<K, V>>)
     }
 
     fun update(map: kotlin.collections.Map<K, V>) {
