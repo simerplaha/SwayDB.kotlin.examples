@@ -324,9 +324,9 @@ class QuickStartMemoryMapTest {
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
                 .build().use { db ->
-                    db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(100)))
+                    db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(200)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(2800, TimeUnit.MILLISECONDS).until {
+                    await().atMost(2400, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
                     }
