@@ -331,7 +331,7 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         private var compressDuplicateValues = `Map$`.`MODULE$`.`apply$default$6`<K, V>()
         private var deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, V>()
         private var groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, V>()
-        private var acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, V>() as scala.Function1<Level0Meter, Accelerator>
+        private var acceleration: scala.Function1<Level0Meter, Accelerator> = `Map$`.`MODULE$`.`apply$default$9`<K, V>()
         private var keySerializer: Any? = null
         private var valueSerializer: Any? = null
 
