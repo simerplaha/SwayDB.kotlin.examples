@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Simer Plaha (@simerplaha)
+ * Copyright (C) 2019 Simer Plaha (@simerplaha)
  *
  * This file is a part of SwayDB.
  *
@@ -10,46 +10,76 @@
  *
  * SwayDB is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with SwayDB. If not, see <https://www.gnu.org/licenses/>.
  */
-package swaydb.kotlin.memory
+package swaydb.java.memory
 
+import scala.Function1
 import scala.Option
-import scala.Some
-import scala.Tuple2
 import scala.collection.JavaConverters
 import scala.concurrent.duration.Deadline
 import scala.concurrent.duration.FiniteDuration
-import scala.runtime.AbstractFunction1
-import swaydb.Apply
+import swaydb.Prepare
 import swaydb.data.IO
+import swaydb.data.accelerate.Accelerator
 import swaydb.data.accelerate.Level0Meter
+import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.compaction.LevelMeter
 import swaydb.kotlin.Serializer
+import swaydb.memory.`Map$`
+import swaydb.memory.`Set$`
 import java.io.Closeable
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
-import swaydb.data.accelerate.Accelerator
-import swaydb.data.api.grouping.KeyValueGroupingStrategy
-import swaydb.Prepare
-import java.util.Arrays
+import java.util.function.Consumer
 
-class Set<K> private constructor(private val database: swaydb.Set<K, IO<*>>) : Closeable {
+/**
+ * The memory Set of data.
+ *
+ * @param <K> the type of the key element
+ */
+class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
+    /**
+     * Checks if a set is empty.
+     *
+     * @return {@code true} if a set is empty, {@code false} otherwise
+     */
+    val isEmpty: Boolean
+        get() {
+            return database.isEmpty().get() as Boolean
+        }
 
-    fun contains(elem: K): Boolean {
-        return database.contains(elem).get() as Boolean;
+    /**
+     * Checks if a set contains key.
+     * @param key the key
+     *
+     * @return {@code true} if a set contains key, {@code false} otherwise
+     */
+    fun contains(key: K): Boolean {
+        return database.contains(key).get() as Boolean
     }
-    
+
+    /**
+     * Checks if a set might contains key.
+     * @param key the key
+     *
+     * @return {@code true} if a set might contains key, {@code false} otherwise
+     */
     fun mightContain(key: K): Boolean {
-        return database.mightContain(key).get() as Boolean;
+        return database.mightContain(key).get() as Boolean
     }
-    
+
+    /**
+     * Returns the iterator of elements in this set.
+     *
+     * @return the iterator of elements in this set
+     */
     fun iterator(): Iterator<K> {
         val entries = database.asScala().toSeq()
         val result = ArrayList<K>()
@@ -61,271 +91,409 @@ class Set<K> private constructor(private val database: swaydb.Set<K, IO<*>>) : C
         return result.iterator()
     }
 
-    override fun close() {
+    /**
+     * Returns the array of elements in this set.
+     *
+     * @return the array of elements in this set
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun toArray(): Array<K> {
+        val entries = database.asScala().toSeq()
+        val result = ArrayList<K>()
+        var index = 0
+        while (index < entries.size()) {
+            result.add(entries.apply(index))
+            index += 1
+        }
+        return result.toArray() as Array<K>
+    }
+
+    /**
+     * Returns the typed array of elements in this set.
+     *
+     * @return the typed array of elements in this set
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T> toArray(a: Array<T>): Array<T> {
+        return toArray() as Array<T>
+    }
+
+    /**
+     * Adds the key to this set.
+     * @param key the key
+     *
+     * @return {@code true} if a set contained key, {@code false} otherwise
+     */
+    fun add(key: K): Boolean {
+        val result = database.add(key).get()
+        return result is scala.Some<*>
+    }
+
+    /**
+     * Adds the key with expire after to this set.
+     * @param key the key
+     * @param expireAfter the expireAfter
+     * @param timeUnit the timeUnit
+     *
+     * @return {@code true} if a set contained key, {@code false} otherwise
+     */
+    fun add(key: K, expireAfter: Long, timeUnit: TimeUnit): Boolean {
+        val result = contains(key)
+        database.add(key, FiniteDuration.create(expireAfter, timeUnit)).get()
+        return result
+    }
+
+    /**
+     * Adds the key with expire at to this set.
+     * @param key the key
+     * @param expireAt the expireAt
+     *
+     * @return {@code true} if a set contained key, {@code false} otherwise
+     */
+    fun add(key: K, expireAt: LocalDateTime): Boolean {
+        val result = contains(key)
+        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
+        database.add(key, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
+        return result
+    }
+
+    /**
+     * Setups the expiration after for key to this set.
+     * @param key the key
+     * @param after the after
+     * @param timeUnit the timeUnit
+     *
+     * @return the old value for this key or null
+     */
+    fun expire(key: K, after: Long, timeUnit: TimeUnit): Boolean {
+        val result = contains(key)
+        database.expire(key, FiniteDuration.create(after, timeUnit)).get()
+        return result
+    }
+
+    /**
+     * Setups the expiration at for key to this set.
+     * @param key the key
+     * @param expireAt the expireAt
+     *
+     * @return the old value for this key or null
+     */
+    fun expire(key: K, expireAt: LocalDateTime): Boolean {
+        val result = contains(key)
+        val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
+        database.expire(key, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
+        return result
+    }
+
+    /**
+     * Checks if a set contains key collection.
+     * @param collection the collection
+     *
+     * @return {@code true} if a set contains key, {@code false} otherwise
+     */
+    fun containsAll(collection: Collection<K>): Boolean {
+        return collection.stream()
+                .allMatch({ elem -> database.contains(elem).get() as Boolean })
+    }
+
+    /**
+     * Adds the keys to this set.
+     * @param list the list
+     *
+     * @return {@code true} if a set contained keys, {@code false} otherwise
+     */
+    fun add(list: List<K>): Boolean {
+        val entries = scala.collection.JavaConverters.asScalaBufferConverter(list).asScala()
+        database.add(entries.toSet()).get()
+        return true
+    }
+
+    /**
+     * Retains the keys to this set.
+     * @param collection the collection
+     *
+     * @return {@code true} if a set contained keys, {@code false} otherwise
+     */
+    fun retainAll(collection: Collection<K>): Boolean {
+        val entries = database.asScala().toSeq()
+        val result = ArrayList<K>()
+        var index = 0
+        while (index < entries.size()) {
+            result.add(entries.apply(index))
+            index += 1
+        }
+        result.stream()
+                .filter({ elem -> !collection.contains(elem) })
+                .forEach(Consumer<K>({ database.remove(it) }))
+        return true
+    }
+
+    /**
+     * Removes the keys of this set.
+     * @param keys the keys
+     */
+    fun remove(keys: MutableSet<K>) {
+        database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get()
+    }
+
+    /**
+     * Removes the keys of this set.
+     * @param from the from
+     * @param to the to
+     */
+    fun remove(from: K, to: K) {
+        database.remove(from, to).get()
+    }
+
+    /**
+     * Returns the size of elements in this set.
+     *
+     * @return the size of elements in this set
+     */
+    fun size(): Int {
+        return database.asScala().size()
+    }
+
+    /**
+     * Checks if a set is not empty.
+     *
+     * @return {@code true} if a set is not empty, {@code false} otherwise
+     */
+    fun nonEmpty(): Boolean {
+        return database.nonEmpty().get() as Boolean
+    }
+
+    /**
+     * Returns the expiration date for key in this set.
+     * @param key the key
+     *
+     * @return the expiration date for key in this set
+     */
+    fun expiration(key: K): LocalDateTime? {
+        val result = database.expiration(key).get()
+        if (result is scala.Some<*>) {
+            val expiration = result.get() as Deadline
+            return LocalDateTime.now().plusNanos(expiration.timeLeft().toNanos())
+        }
+        return null
+    }
+
+    /**
+     * Returns the time left for key in this set.
+     * @param key the key
+     *
+     * @return the time left for key in this set
+     */
+    fun timeLeft(key: K): Duration? {
+        val result = database.timeLeft(key).get()
+        if (result is scala.Some<*>) {
+            val duration = result.get() as FiniteDuration
+            return Duration.ofNanos(duration.toNanos())
+        }
+        return null
+    }
+
+    /**
+     * Returns the size for segments for this set.
+     *
+     * @return the size for segments for this set
+     */
+    fun sizeOfSegments(): Long {
+        return database.sizeOfSegments()
+    }
+
+    /**
+     * Returns the level of meter for zerro level.
+     *
+     * @return the level of meter for zerro level
+     */
+    fun level0Meter(): Level0Meter {
+        return database.level0Meter()
+    }
+
+    /**
+     * Returns the level of meter for first level.
+     *
+     * @return the level of meter for first level
+     */
+    fun level1Meter(): Optional<LevelMeter> {
+        return levelMeter(1)
+    }
+
+    /**
+     * Returns the level of meter for level.
+     * @param levelNumber the level number
+     *
+     * @return the level of meter for first level
+     */
+    fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
+        val levelMeter = database.levelMeter(levelNumber)
+        return if (levelMeter.isEmpty()) Optional.empty<LevelMeter>() else Optional.ofNullable(levelMeter.get())
+    }
+
+    /**
+     * Clears this set.
+     */
+    fun clear() {
+        database.asScala().clear()
+    }
+
+    /**
+     * Removes the key of this set.
+     * @param key the key
+     *
+     * @return {@code true} if old key was present, {@code false} otherwise
+     */
+    fun remove(key: K): Boolean {
+        val result = database.remove(key).get()
+        return result is scala.Some<*>
+    }
+
+    /**
+     * Returns the java set of this set.
+     *
+     * @return the java set of this set
+     */
+    fun asJava(): MutableSet<K>? {
+        return JavaConverters.setAsJavaSetConverter(database.asScala()).asJava()
+    }
+
+    /**
+     * Closes the database.
+     */
+    public override fun close() {
         database.closeDatabase().get()
     }
 
-/*    
-    public Object[] toArray() {
-        Seq<K> entries = database.asScala().toSeq();
-        java.util.List<K> result = new ArrayList<>();
-        for (int index = 0; index < entries.size(); index += 1) {
-            result.add(entries.apply(index));
-        }
-        return result.toArray();
+    /**
+     * Starts the commit function for this set.
+     * @param prepares the prepares
+     *
+     * @return the level zerro for this set
+     */
+    fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>): Level0Meter {
+        val preparesList = Arrays.asList(*prepares)
+        val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
+        return database.commit(prepareIterator).get() as Level0Meter
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T[] toArray(T[] a) {
-        return (T[]) toArray();
-    }
-
-    public boolean add(K key) {
-        Object result = database.add(key).get();
-        return result instanceof scala.Some;
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean add(K key, long expireAfter, TimeUnit timeUnit) {
-        boolean result = contains(key);
-        database.add(key, FiniteDuration.create(expireAfter, timeUnit)).get();
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean add(K key, LocalDateTime expireAt) {
-        boolean result = contains(key);
-        int expireAtNano = Duration.between(LocalDateTime.now(), expireAt).getNano();
-        database.add(key, FiniteDuration.create(expireAtNano, TimeUnit.NANOSECONDS).fromNow()).get();
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean expire(K key, long after, TimeUnit timeUnit) {
-        boolean result = contains(key);
-        database.expire(key, FiniteDuration.create(after, timeUnit)).get();
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean expire(K key, LocalDateTime expireAt) {
-        boolean result = contains(key);
-        int expireAtNano = Duration.between(LocalDateTime.now(), expireAt).getNano();
-        database.expire(key, FiniteDuration.create(expireAtNano, TimeUnit.NANOSECONDS).fromNow()).get();
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    public boolean containsAll(Collection<K> collection) {
-        return collection.stream()
-                .allMatch(elem -> (boolean) database.contains(elem).get());
-    }
-    
-    public boolean add(List<? extends K> list) {
-        Buffer<? extends K> entries = scala.collection.JavaConverters.asScalaBufferConverter(list).asScala();
-        database.add(entries.toSet()).get();
-        return true;
-    }
-
-    @SuppressWarnings("unchecked")    
-    public boolean retainAll(Collection<K> collection) {
-        Seq<K> entries = database.asScala().toSeq();
-        java.util.List<K> result = new ArrayList<>();
-        for (int index = 0; index < entries.size(); index += 1) {
-            result.add(entries.apply(index));
-        }
-        result.stream()
-                .filter(elem -> !collection.contains(elem))
-                .forEach(database::remove);
-        return true;
-    }
-
-    public void remove(java.util.Set<K> keys) {
-        database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get();
-    }
-    
-    public void remove(K from, K to) {
-        database.remove(from, to).get();
-    }
-
-    @SuppressWarnings("unchecked")    
-    public int size() {
-        return database.asScala().size();
-    }
-    
-    public boolean isEmpty() {
-        return (boolean) database.isEmpty().get();
-    }
-
-    public boolean nonEmpty() {
-        return (boolean) database.nonEmpty().get();
-    }
-
-    public LocalDateTime expiration(K key) {
-        Object result = database.expiration(key).get();
-        if (result instanceof scala.Some) {
-            Deadline expiration = (Deadline) ((scala.Some) result).get();
-            return LocalDateTime.now().plusNanos(expiration.timeLeft().toNanos());
-        }
-        return null;
-    }
-
-    public Duration timeLeft(K key) {
-        Object result = database.timeLeft(key).get();
-        if (result instanceof scala.Some) {
-            FiniteDuration duration = (FiniteDuration) ((scala.Some) result).get();
-            return Duration.ofNanos(duration.toNanos());
-        }
-        return null;
-    }
-
-    public long sizeOfSegments() {
-        return database.sizeOfSegments();
-    }
-
-    public Level0Meter level0Meter() {
-        return database.level0Meter();
-    }
-
-    public Optional<LevelMeter> level1Meter() {
-        return levelMeter(1);
-    }
-
-    public Optional<LevelMeter> levelMeter(int levelNumber) {
-        Option<LevelMeter> levelMeter = database.levelMeter(levelNumber);
-        return levelMeter.isEmpty() ? Optional.empty() : Optional.ofNullable(levelMeter.get());
-    }
-
-    public void clear() {
-        database.asScala().clear();
-    }
-
-    public boolean remove(K key) {
-        Object result = database.remove(key).get();
-        return result instanceof scala.Some;
-    }
-
-    public java.util.Set<K> asJava() {
-        return JavaConverters.setAsJavaSetConverter(database.asScala()).asJava();
-    }
-
-    public void close() {
-        database.closeDatabase().get();
-    }
-
-    @SuppressWarnings("unchecked")    
-    public Level0Meter commit(Prepare<K, scala.runtime.Nothing$>... prepares) {
-        List<Prepare<K, scala.runtime.Nothing$>> preparesList = Arrays.asList(prepares);
-        Iterable<Prepare<K, scala.runtime.Nothing$>> prepareIterator
-                = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala();
-        return (Level0Meter) database.commit(prepareIterator).get();
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <K> swaydb.memory.Set<K> create(Object keySerializer) {
-        int mapSize = Map$.MODULE$.apply$default$1();
-        int segmentSize = Map$.MODULE$.apply$default$2();
-        int cacheSize = Map$.MODULE$.apply$default$3();
-        FiniteDuration cacheCheckDelay = Map$.MODULE$.apply$default$4();
-        double bloomFilterFalsePositiveRate = Map$.MODULE$.apply$default$5();
-        boolean compressDuplicateValues = Map$.MODULE$.apply$default$6();
-        boolean deleteSegmentsEventually = Map$.MODULE$.apply$default$7();
-        Option<KeyValueGroupingStrategy> groupingStrategy = Map$.MODULE$.apply$default$8();
-        Function1<Level0Meter, Accelerator> acceleration = Map$.MODULE$.apply$default$9();
-        swaydb.data.order.KeyOrder keyOrder = Map$.MODULE$.apply$default$12(mapSize, segmentSize,
-                cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
-                deleteSegmentsEventually, groupingStrategy, acceleration);
-        ExecutionContext ec = Map$.MODULE$.apply$default$13(mapSize, segmentSize, cacheSize,
-                cacheCheckDelay, bloomFilterFalsePositiveRate,
-                compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration);
-        return new swaydb.memory.Set<>(
-                (swaydb.Set<K, IO>) Set$.MODULE$.apply(mapSize, segmentSize, cacheSize,
-                cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
-                deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
-                keyOrder, ec).get());
-    }
-
-    public static class Builder<K> {
-
-        private int mapSize = Map$.MODULE$.apply$default$1();
-        private int segmentSize = Map$.MODULE$.apply$default$2();
-        private int cacheSize = Map$.MODULE$.apply$default$3();
-        private FiniteDuration cacheCheckDelay = Map$.MODULE$.apply$default$4();
-        private double bloomFilterFalsePositiveRate = Map$.MODULE$.apply$default$5();
-        private boolean compressDuplicateValues = Map$.MODULE$.apply$default$6();
-        private boolean deleteSegmentsEventually = Map$.MODULE$.apply$default$7();
-        private Option<KeyValueGroupingStrategy> groupingStrategy = Map$.MODULE$.apply$default$8();
-        private Function1<Level0Meter, Accelerator> acceleration = Map$.MODULE$.apply$default$9();
-        private Object keySerializer;
-
-        public Builder<K> withMapSize(int mapSize) {
-            this.mapSize = mapSize;
-            return this;
+    class Builder<K> {
+        private var mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, scala.runtime.`Nothing$`>()
+        private var segmentSize = `Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
+        private var cacheSize = `Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
+        private var cacheCheckDelay = `Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
+        private var bloomFilterFalsePositiveRate = `Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
+        private var compressDuplicateValues = `Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
+        private var deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
+        private var groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
+        private var acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>()
+        private var keySerializer: Any? = null
+        fun withMapSize(mapSize: Int): Builder<K> {
+            this.mapSize = mapSize
+            return this
         }
 
-        public Builder<K> withSegmentSize(int segmentSize) {
-            this.segmentSize = segmentSize;
-            return this;
+        fun withSegmentSize(segmentSize: Int): Builder<K> {
+            this.segmentSize = segmentSize
+            return this
         }
 
-        public Builder<K> withCacheSize(int cacheSize) {
-            this.cacheSize = cacheSize;
-            return this;
+        fun withCacheSize(cacheSize: Int): Builder<K> {
+            this.cacheSize = cacheSize
+            return this
         }
 
-        public Builder<K> withCacheCheckDelay(FiniteDuration cacheCheckDelay) {
-            this.cacheCheckDelay = cacheCheckDelay;
-            return this;
+        fun withCacheCheckDelay(cacheCheckDelay: FiniteDuration): Builder<K> {
+            this.cacheCheckDelay = cacheCheckDelay
+            return this
         }
 
-        public Builder<K> withBloomFilterFalsePositiveRate(double bloomFilterFalsePositiveRate) {
-            this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-            return this;
+        fun withBloomFilterFalsePositiveRate(bloomFilterFalsePositiveRate: Double): Builder<K> {
+            this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate
+            return this
         }
 
-        public Builder<K> withCompressDuplicateValues(boolean compressDuplicateValues) {
-            this.compressDuplicateValues = compressDuplicateValues;
-            return this;
+        fun withCompressDuplicateValues(compressDuplicateValues: Boolean): Builder<K> {
+            this.compressDuplicateValues = compressDuplicateValues
+            return this
         }
 
-        public Builder<K> withDeleteSegmentsEventually(boolean deleteSegmentsEventually) {
-            this.deleteSegmentsEventually = deleteSegmentsEventually;
-            return this;
+        fun withDeleteSegmentsEventually(deleteSegmentsEventually: Boolean): Builder<K> {
+            this.deleteSegmentsEventually = deleteSegmentsEventually
+            return this
         }
 
-        public Builder<K> withGroupingStrategy(Option<KeyValueGroupingStrategy> groupingStrategy) {
-            this.groupingStrategy = groupingStrategy;
-            return this;
+        fun withGroupingStrategy(groupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K> {
+            this.groupingStrategy = groupingStrategy
+            return this
         }
 
-        public Builder<K> withAcceleration(Function1<Level0Meter, Accelerator> acceleration) {
-            this.acceleration = acceleration;
-            return this;
+        fun withAcceleration(acceleration: Function1<Level0Meter, Accelerator>): Builder<K> {
+            this.acceleration = acceleration
+            return this
         }
 
-        public Builder<K> withKeySerializer(Object keySerializer) {
-            this.keySerializer = keySerializer;
-            return this;
+        fun withKeySerializer(keySerializer: Any): Builder<K> {
+            this.keySerializer = keySerializer
+            return this
         }
 
-        @SuppressWarnings("unchecked")
-        public swaydb.memory.Set<K> build() {
-            swaydb.data.order.KeyOrder keyOrder = Map$.MODULE$.apply$default$12(mapSize, segmentSize,
+        @Suppress("UNCHECKED_CAST")
+        fun build(): Set<K> {
+            val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>(mapSize, segmentSize,
                     cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
-                    deleteSegmentsEventually, groupingStrategy, acceleration);
-            ExecutionContext ec = Map$.MODULE$.apply$default$13(mapSize, segmentSize, cacheSize,
+                    deleteSegmentsEventually, groupingStrategy, acceleration)
+            val ec = `Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>(mapSize, segmentSize, cacheSize,
                     cacheCheckDelay, bloomFilterFalsePositiveRate,
-                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration);
-            return new swaydb.memory.Set<>(
-                    (swaydb.Set<K, IO>) Set$.MODULE$.apply(mapSize, segmentSize, cacheSize,
-                    cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
-                    deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
-                    keyOrder, ec).get());
+                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
+            return Set(
+                    `Set$`.`MODULE$`.apply(mapSize, segmentSize, cacheSize,
+                            cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
+                            deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
+                            keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
         }
     }
 
-    public static <K> Builder<K> builder() {
-        return new Builder<>();
+    companion object {
+        /**
+         * Creates the set.
+         * @param <K> the type of the key element
+         * @param keySerializer the keySerializer
+         *
+         * @return the set
+         */
+        @Suppress("UNCHECKED_CAST")
+        fun <K> create(keySerializer: Any): Set<K> {
+            val mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, scala.runtime.`Nothing$`>()
+            val segmentSize = `Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
+            val cacheSize = `Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
+            val cacheCheckDelay = `Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
+            val bloomFilterFalsePositiveRate = `Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
+            val compressDuplicateValues = `Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
+            val deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
+            val groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
+            val acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>()
+            val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>(mapSize, segmentSize,
+                    cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
+                    deleteSegmentsEventually, groupingStrategy, acceleration)
+            val ec = `Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>(mapSize, segmentSize, cacheSize,
+                    cacheCheckDelay, bloomFilterFalsePositiveRate,
+                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
+            return Set(
+                    `Set$`.`MODULE$`.apply(mapSize, segmentSize, cacheSize,
+                            cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
+                            deleteSegmentsEventually, groupingStrategy, acceleration, Serializer.classToType(keySerializer),
+                            keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
+        }
+
+        /**
+         * Creates the builder.
+         * @param <K> the type of the key element
+         *
+         * @return the builder
+         */
+        fun <K> builder(): Builder<K> {
+            return Builder()
+        }
     }
-*/
 }
