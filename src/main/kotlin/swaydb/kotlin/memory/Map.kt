@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with SwayDB. If not, see <https://www.gnu.org/licenses/>.
  */
-package swaydb.memory
+package swaydb.kotlin.memory
 
 import scala.Option
 import scala.Some
@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit
 import swaydb.data.accelerate.Accelerator
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.Prepare
+import swaydb.memory.`Map$`
 import java.util.Arrays
 
 class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
@@ -391,7 +392,7 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun build(): swaydb.memory.Map<K, V> {
+        fun build(): Map<K, V> {
             val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, V>(mapSize, segmentSize,
                     cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
                     deleteSegmentsEventually, groupingStrategy, acceleration)

@@ -39,7 +39,7 @@ class QuickStartMemoryMapTest {
     fun memoryMapIntStringFrom() {
         // Create a memory database
         // val db = memory.Map[Int, String]().get
-        swaydb.memory.Map.create<Int, String>(
+        swaydb.kotlin.memory.Map.create<Int, String>(
                 Int::class, String::class).use { db ->
             // db.put(1, "one").get
             db.put(1, "one")
@@ -105,7 +105,7 @@ class QuickStartMemoryMapTest {
     @Test
     fun memoryMapIntStringClear() {
         // Create a memory database
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -125,7 +125,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringSize() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -140,7 +140,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringIsEmpty() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -152,7 +152,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringContainsValue() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -164,7 +164,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringMightContain() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -176,7 +176,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringHead() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -191,7 +191,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringKeysHead() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -206,7 +206,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringKeysLast() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -222,7 +222,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringLast() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -238,7 +238,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringPutMap() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -252,7 +252,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringUpdateMap() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -267,7 +267,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringKeySet() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -279,7 +279,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringValues() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -291,7 +291,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringEntrySet() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -303,7 +303,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringPutExpireAfter() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -319,7 +319,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringPutExpireAt() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -335,7 +335,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringExpiration() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -350,7 +350,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringTimeLeft() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -364,7 +364,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringKeySize() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -376,7 +376,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringValueSize() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -388,7 +388,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringSizes() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -404,7 +404,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringExpireAfter() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -421,7 +421,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringExpireAt() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -438,7 +438,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringUpdate() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -451,7 +451,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringAsJava() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -463,7 +463,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringRemove() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
@@ -481,7 +481,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapStringIntRegisterApplyFunctionUpdate() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<String, Int>()
                 .withKeySerializer(String::class)
                 .withValueSerializer(Int::class)
@@ -498,7 +498,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapStringIntRegisterApplyFunctionExpire() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<String, Int>()
                 .withKeySerializer(String::class)
                 .withValueSerializer(Int::class)
@@ -521,7 +521,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapStringIntRegisterApplyFunctionRemove() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<String, Int>()
                 .withKeySerializer(String::class)
                 .withValueSerializer(Int::class)
@@ -537,7 +537,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapStringIntRegisterApplyFunctionNothing() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<String, Int>()
                 .withKeySerializer(String::class)
                 .withValueSerializer(Int::class)
@@ -554,7 +554,7 @@ class QuickStartMemoryMapTest {
 
     @Test
     fun memoryMapIntStringFromBuilder() {
-        swaydb.memory.Map
+        swaydb.kotlin.memory.Map
                 .builder<Int, String>()
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
