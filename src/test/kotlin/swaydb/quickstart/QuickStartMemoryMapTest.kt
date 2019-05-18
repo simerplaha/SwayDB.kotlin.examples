@@ -22,6 +22,9 @@ import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
+import scala.Tuple2
+import scala.collection.mutable.ListBuffer
+import scala.runtime.AbstractFunction1
 import swaydb.Prepare
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.kotlin.Apply
@@ -29,8 +32,6 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
-import scala.collection.mutable.ListBuffer
-import scala.runtime.AbstractFunction1
 
 class QuickStartMemoryMapTest {
 
@@ -40,7 +41,7 @@ class QuickStartMemoryMapTest {
         // Create a memory database
         // val db = memory.Map[Int, String]().get
         swaydb.kotlin.memory.Map.create<Int, String>(
-                Int::class, String::class).use { db ->
+                Int::class, String::class).use({ db ->
             // db.put(1, "one").get
             db.put(1, "one")
             // db.get(1).get
@@ -61,45 +62,40 @@ class QuickStartMemoryMapTest {
                     swaydb.kotlin.Prepare.put(3, "three value", 1000, TimeUnit.MILLISECONDS),
                     swaydb.kotlin.Prepare.remove(1) as Prepare<Int, String>
             )
+
             assertThat(db.get(2), equalTo("two value"))
-            assertThat(db.get(3), equalTo("three value"))
             assertThat(db.get(1), nullValue())
 
             // write 100 key-values atomically
             db.put((1..100)
                     .map { index -> AbstractMap.SimpleEntry<Int, String>(index, index.toString()) }
                     .map { it.key to it.value }
-                    .toMap())
+                    .toMap().toMutableMap())
 
             // Iteration: fetch all key-values withing range 10 to 90, update values
             // and atomically write updated key-values
             (db
                     .from(10)
-                    .takeWhile(object: AbstractFunction1<scala.Tuple2<Int, String>, Any>() {
-                        override fun apply(t1: scala.Tuple2<Int, String>): Any {
-                            return t1._1() as Int <= 90
-                        }
-                    })
-                    .map(object: AbstractFunction1<scala.Tuple2<Int, String>, Any>() {
-                        override fun apply(t1: scala.Tuple2<Int, String>): Any {
+                    .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
+                    ?.map(object : AbstractFunction1<Tuple2<Int, String>, Any>() {
+                        override fun apply(t1: Tuple2<Int, String>): Any {
                             val key = t1._1() as Int
                             val value = t1._2() as String
-                            return scala.Tuple2.apply(key, value + "_updated")
+                            return Tuple2.apply(key, value + "_updated")
                         }
                     })
-                    .materialize() as swaydb.data.IO.Success<ListBuffer<*>>)
+                    ?.materialize() as swaydb.data.IO.Success<ListBuffer<*>>)
                     .foreach(object : AbstractFunction1<ListBuffer<*>, Any>() {
                         override fun apply(t1: ListBuffer<*>): Any? {
                             db.put(t1.seq())
                             return null
                         }
-            })
-
+                    })
             // assert the key-values were updated
             (10..90)
                     .map { item -> AbstractMap.SimpleEntry<Int, String>(item, db.get(item)) }
                     .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
-        }
+        })
     }
 
     @Test

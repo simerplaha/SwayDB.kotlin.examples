@@ -18,146 +18,273 @@
  */
 package swaydb.kotlin.memory
 
+import scala.Function1
 import scala.Option
-import scala.Some
 import scala.Tuple2
 import scala.collection.JavaConverters
 import scala.concurrent.duration.Deadline
 import scala.concurrent.duration.FiniteDuration
 import scala.runtime.AbstractFunction1
+import scala.runtime.BoxedUnit
 import swaydb.Apply
+import swaydb.Prepare
+import swaydb.Stream
 import swaydb.data.IO
+import swaydb.data.accelerate.Accelerator
 import swaydb.data.accelerate.Level0Meter
+import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.compaction.LevelMeter
 import swaydb.kotlin.Serializer
+import swaydb.memory.`Map$`
 import java.io.Closeable
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
-import swaydb.data.accelerate.Accelerator
-import swaydb.data.api.grouping.KeyValueGroupingStrategy
-import swaydb.Prepare
-import swaydb.memory.`Map$`
-import java.util.Arrays
+import java.util.function.Consumer
+import java.util.function.Function
+import java.util.function.Predicate
+import java.util.function.UnaryOperator
 
-class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
+/**
+ * The memory Map of data.
+ *
+ * @param <K> the type of the key element
+ * @param <V> the type of the value element
+ */
+class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
 
+    /**
+     * Checks the map is empty.
+     *
+     * @return `true` if a map is empty, `false` otherwise
+     */
+    fun isEmpty(): Boolean {
+        return database.isEmpty().get() as Boolean
+    }
+
+    /**
+     * Returns the size of elements in this map.
+     *
+     * @return the size of elements in this map
+     */
     fun size(): Int {
         return database.asScala().size()
     }
 
-    fun isEmpty(): Boolean {
-        return database.isEmpty.get() as Boolean
-    }
-
+    /**
+     * Checks the map is not empty.
+     *
+     * @return `true` if a map is not empty, `false` otherwise
+     */
     fun nonEmpty(): Boolean {
         return database.nonEmpty().get() as Boolean
     }
 
+    /**
+     * Returns the expiration date for key in this map.
+     * @param key the key
+     *
+     * @return the expiration date for key in this map
+     */
     fun expiration(key: K): LocalDateTime? {
         val result = database.expiration(key).get()
-        if (result is Some<*>) {
+        if (result is scala.Some<*>) {
             val expiration = result.get() as Deadline
             return LocalDateTime.now().plusNanos(expiration.timeLeft().toNanos())
         }
         return null
     }
 
+    /**
+     * Returns the time left for key in this map.
+     * @param key the key
+     *
+     * @return the time left for key in this map
+     */
     fun timeLeft(key: K): Duration? {
         val result = database.timeLeft(key).get()
-        if (result is Some<*>) {
+        if (result is scala.Some<*>) {
             val duration = result.get() as FiniteDuration
             return Duration.ofNanos(duration.toNanos())
         }
         return null
     }
 
+    /**
+     * Returns the key size in bytes for this map.
+     * @param key the key
+     *
+     * @return the key size in bytes for this map
+     */
     fun keySize(key: K): Int {
         return database.keySize(key)
     }
 
+    /**
+     * Returns the value size in bytes for this map.
+     * @param value the value
+     *
+     * @return the value size in bytes for this map
+     */
     fun valueSize(value: V): Int {
         return database.valueSize(value)
     }
 
+    /**
+     * Returns the size for segments for this map.
+     *
+     * @return the size for segments for this map
+     */
     fun sizeOfSegments(): Long {
         return database.sizeOfSegments()
     }
 
+    /**
+     * Returns the level of meter for zerro level.
+     *
+     * @return the level of meter for zerro level
+     */
     fun level0Meter(): Level0Meter {
         return database.level0Meter()
     }
 
+    /**
+     * Returns the level of meter for first level.
+     *
+     * @return the level of meter for first level
+     */
     fun level1Meter(): Optional<LevelMeter> {
         return levelMeter(1)
     }
 
+    /**
+     * Returns the level of meter for level.
+     * @param levelNumber the level number
+     *
+     * @return the level of meter for first level
+     */
     fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
         val levelMeter = database.levelMeter(levelNumber)
         return if (levelMeter.isEmpty) Optional.empty() else Optional.ofNullable(levelMeter.get())
     }
 
+    /**
+     * Checks if a map contains key.
+     * @param key the key
+     *
+     * @return `true` if a map contains key, `false` otherwise
+     */
     fun containsKey(key: K): Boolean {
         return database.contains(key).get() as Boolean
     }
 
+    /**
+     * Checks if a map might contain key.
+     * @param key the key
+     *
+     * @return `true` if a map might contains key, `false` otherwise
+     */
     fun mightContain(key: K): Boolean {
         return database.mightContain(key).get() as Boolean
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Returns the head key for this map.
+     *
+     * @return the head key for this map
+     */
     fun head(): MutableMap.MutableEntry<K, V>? {
         val result = database.headOption().get()
-        if (result is Some<*>) {
+        if (result is scala.Some<*>) {
             val tuple2 = result.get() as Tuple2<K, V>
-            return AbstractMap.SimpleEntry<K, V>(tuple2._1(), tuple2._2())
+            return AbstractMap.SimpleEntry(tuple2._1(), tuple2._2())
         }
         return null
     }
 
+    /**
+     * Returns the optional head key for this map.
+     *
+     * @return the optional head key for this map
+     */
     fun headOption(): Optional<MutableMap.MutableEntry<K, V>> {
         return Optional.ofNullable(head())
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Returns the last key for this map.
+     *
+     * @return the last key for this map
+     */
     fun last(): MutableMap.MutableEntry<K, V>? {
         val result = database.lastOption().get()
-        if (result is Some<*>) {
+        if (result is scala.Some<*>) {
             val tuple2 = result.get() as Tuple2<K, V>
-            return AbstractMap.SimpleEntry<K, V>(tuple2._1(), tuple2._2())
+            return AbstractMap.SimpleEntry(tuple2._1(), tuple2._2())
         }
         return null
     }
 
+    /**
+     * Returns the optional last key for this map.
+     *
+     * @return the optional last key for this map
+     */
     fun lastOption(): Optional<MutableMap.MutableEntry<K, V>> {
         return Optional.ofNullable(last())
     }
 
+    /**
+     * Checks if a map contains value.
+     * @param value the value
+     *
+     * @return `true` if a map contains value, `false` otherwise
+     */
     fun containsValue(value: V): Boolean {
         return values().contains(value)
     }
 
-    fun put(map: kotlin.collections.Map<K, V>) {
-        val entries = JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
+    /**
+     * Puts a map object to this map.
+     * @param map the map
+     */
+    fun put(map: MutableMap<K, V>) {
+        val entries = scala.collection.JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.put(entries.toSet()).get()
     }
 
+    /**
+     * Puts a seq object to this map.
+     * @param seq the seq
+     */
     @Suppress("UNCHECKED_CAST")
     fun put(seq: scala.collection.Seq<*>) {
         database.put(seq as scala.collection.Seq<Tuple2<K, V>>)
     }
 
-    fun update(map: kotlin.collections.Map<K, V>) {
-        val entries = JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
+    /**
+     * Updates map entries for this map.
+     * @param map the map
+     */
+    fun update(map: MutableMap<K, V>) {
+        val entries = scala.collection.JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.update(entries.toSet()).get()
     }
 
+    /**
+     * Clears this map.
+     */
     fun clear() {
         database.asScala().clear()
     }
 
-    fun keySet(): MutableSet<K> {
+    /**
+     * Returns the key set for this map.
+     *
+     * @return the key set for this map
+     */
+    fun keySet(): Set<K> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<K>()
         var index = 0
@@ -169,35 +296,56 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         return result
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Returns the head key for this map.
+     *
+     * @return the head key for this map
+     */
     fun keysHead(): K? {
         val result = database.keys().headOption().get()
-        if (result is Some<*>) {
-            return result.get() as K
-        }
-        return null
+        return if (result is scala.Some<*>) {
+            result.get() as K
+        } else null
     }
 
+    /**
+     * Returns the optional head key for this map.
+     *
+     * @return the optional head key for this map
+     */
     fun keysHeadOption(): Optional<K> {
         return Optional.ofNullable(keysHead())
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Returns the last key for this map.
+     *
+     * @return the last key for this map
+     */
     fun keysLast(): K? {
         val result = database.keys().lastOption().get()
-        if (result is Some<*>) {
-            return result.get() as K
-        }
-        return null
+        return if (result is scala.Some<*>) {
+            result.get() as K
+        } else null
     }
 
+    /**
+     * Returns the optional last key for this map.
+     *
+     * @return the optional last key for this map
+     */
     fun keysLastOption(): Optional<K> {
         return Optional.ofNullable(keysLast())
     }
 
-    fun values(): Collection<V> {
+    /**
+     * Returns the values for this map.
+     *
+     * @return the values last key for this map
+     */
+    fun values(): List<V> {
         val entries = database.asScala().toSeq()
-        val result = LinkedHashSet<V>()
+        val result = ArrayList<V>()
         var index = 0
         while (index < entries.size()) {
             val tuple2 = entries.apply(index)
@@ -207,30 +355,59 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         return result
     }
 
-    fun entrySet(): MutableSet<MutableMap.MutableEntry<K, V>> {
+    /**
+     * Returns the entrues for this map.
+     *
+     * @return the entrues last key for this map
+     */
+    fun entrySet(): Set<MutableMap.MutableEntry<K, V>> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<MutableMap.MutableEntry<K, V>>()
         var index = 0
         while (index < entries.size()) {
             val tuple2 = entries.apply(index)
-            result.add(AbstractMap.SimpleEntry<K, V>(tuple2._1(), tuple2._2()))
+            result.add(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
             index += 1
         }
         return result
     }
 
+    /**
+     * Puts the key/value pair for this map.
+     * @param key the key
+     * @param value the value
+     *
+     * @return the old value for this key or null
+     */
     fun put(key: K, value: V): V? {
         val oldValue = get(key)
         database.put(key, value).get()
         return oldValue
     }
 
+    /**
+     * Puts the key/value pair for this map with expiration after data.
+     * @param key the key
+     * @param value the value
+     * @param expireAfter the expireAfter
+     * @param timeUnit the timeUnit
+     *
+     * @return the old value for this key or null
+     */
     fun put(key: K, value: V, expireAfter: Long, timeUnit: TimeUnit): V? {
         val oldValue = get(key)
         database.put(key, value, FiniteDuration.create(expireAfter, timeUnit)).get()
         return oldValue
     }
 
+    /**
+     * Puts the key/value pair for this map with expiration at data.
+     * @param key the key
+     * @param value the value
+     * @param expireAt the expireAt
+     *
+     * @return the old value for this key or null
+     */
     fun put(key: K, value: V, expireAt: LocalDateTime): V? {
         val oldValue = get(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
@@ -238,12 +415,27 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         return oldValue
     }
 
+    /**
+     * Setups the expiration after for key to this map.
+     * @param key the key
+     * @param after the after
+     * @param timeUnit the timeUnit
+     *
+     * @return the old value for this key or null
+     */
     fun expire(key: K, after: Long, timeUnit: TimeUnit): V? {
         val oldValue = get(key)
         database.expire(key, FiniteDuration.create(after, timeUnit)).get()
         return oldValue
     }
 
+    /**
+     * Setups the expiration at for key to this map.
+     * @param key the key
+     * @param expireAt the expireAt
+     *
+     * @return the old value for this key or null
+     */
     fun expire(key: K, expireAt: LocalDateTime): V? {
         val oldValue = get(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
@@ -251,71 +443,248 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         return oldValue
     }
 
+    /**
+     * Updates the key/value for this map.
+     * @param key the key
+     * @param value the value
+     *
+     * @return the old value for this key or null
+     */
     fun update(key: K, value: V): V? {
         val oldValue = get(key)
         database.update(key, value).get()
         return oldValue
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun get(key: K): V? {
+    /**
+     * Returns the value or null for key of this map.
+     * @param key the key
+     *
+     * @return the value or null for key of this map
+     */
+    operator fun get(key: K): V? {
         val result = database.get(key).get()
-        if (result is Some<*>) {
-            return result.get() as V
-        }
-        return null
+        return if (result is scala.Some<*>) {
+            result.get() as V
+        } else null
     }
 
+    /**
+     * Removes the value for key of this map.
+     * @param key the key
+     *
+     * @return the old value or null for key of this map
+     */
     fun remove(key: K): V? {
         val oldValue = get(key)
         database.remove(key).get()
         return oldValue
     }
 
-    fun remove(keys: MutableSet<K>) {
-        database.remove(JavaConverters.asScalaSetConverter<K>(keys).asScala()).get()
+    /**
+     * Removes the values for key set of this map.
+     * @param keys the keys
+     */
+    fun remove(keys: Set<K>) {
+        database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get()
     }
 
+    /**
+     * Removes the values for keys of this map.
+     * @param from the from
+     * @param to the to
+     */
     fun remove(from: K, to: K) {
         database.remove(from, to).get()
     }
 
-    fun asJava(): kotlin.collections.Map<K, V>? {
+    /**
+     * Returns the java map of this map.
+     *
+     * @return the java map of this map
+     */
+    fun asJava(): MutableMap<K, V> {
         return JavaConverters.mapAsJavaMapConverter(database.asScala()).asJava()
     }
 
+    /**
+     * Registers the function for this map.
+     * @param functionId the functionId
+     * @param function the function
+     *
+     * @return the function id
+     */
     fun registerFunction(functionId: K, function: (V) -> Apply.Map<V>): K {
         return database.registerFunction(functionId, object : AbstractFunction1<V, Apply.Map<V>>() {
             override fun apply(value: V): Apply.Map<V> {
                 return function(value)
             }
-        }) as K
+        })
     }
 
+    /**
+     * Executes the registered function for this map.
+     * @param key the key
+     * @param functionId the functionId
+     */
     fun applyFunction(key: K, functionId: K) {
         database.applyFunction(key, functionId)
     }
 
-    fun from(key: K): swaydb.Map<K, V, IO<*>> {
-        return database.from(key)
+    /**
+     * Returns the map object which starts from key for this map.
+     * @param key the key
+     *
+     * @return the map object
+     */
+    fun from(key: K): Map<K, V> {
+        return Map(database.from(key))
     }
 
-    fun fromOrAfter(key: K): swaydb.Map<K, V, IO<*>> {
-        return database.fromOrAfter(key)
+    /**
+     * Returns the map object which starts or after key for this map.
+     * @param key the key
+     *
+     * @return the map object
+     */
+    fun fromOrAfter(key: K): Map<K, V> {
+        return Map(database.fromOrAfter(key))
     }
 
-    fun fromOrBefore(key: K): swaydb.Map<K, V, IO<*>> {
-        return database.fromOrBefore(key)
+    /**
+     * Returns the map object which starts or before key for this map.
+     * @param key the key
+     *
+     * @return the map object
+     */
+    fun fromOrBefore(key: K): Map<K, V> {
+        return Map(database.fromOrBefore(key))
     }
 
+    /**
+     * Returns the key objects for this map.
+     *
+     * @return the key objects for this map
+     */
     fun keys(): swaydb.Set<K, IO<*>> {
         return database.keys()
     }
 
+    /**
+     * Returns the reversed map object for this map.
+     *
+     * @return the reversed map object for this map
+     */
+    fun reverse(): Map<K, V> {
+        return Map(database.reverse())
+    }
+
+    /**
+     * Starts the map function for this map.
+     * @param function the function
+     *
+     * @return the stream object for this map
+     */
+    fun map(function: UnaryOperator<MutableMap.MutableEntry<K, V>>): Stream<Any, IO<*>>? {
+        return database.map(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+            override fun apply(tuple2: Tuple2<K, V>): Any {
+                val result = function.apply(
+                        AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
+                return Tuple2.apply<K, V>(result.key, result.value)
+            }
+        })
+    }
+
+    /**
+     * Starts the drop function for this map.
+     * @param count the count
+     *
+     * @return the stream object for this map
+     */
+    fun drop(count: Int): Stream<Tuple2<K, V>, IO<*>>? {
+        return database.drop(count)
+    }
+
+    /**
+     * Starts the dropWhile function for this map.
+     * @param predicate the function
+     *
+     * @return the stream object for this map
+     */
+    fun dropWhile(predicate: Predicate<MutableMap.MutableEntry<K, V>>): Stream<Tuple2<K, V>, IO<*>>? {
+        return database.dropWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+            override fun apply(tuple2: Tuple2<K, V>): Any {
+                return predicate.test(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
+            }
+        })
+    }
+
+    /**
+     * Starts the take function for this map.
+     * @param count the count
+     *
+     * @return the stream object for this map
+     */
+    fun take(count: Int): Stream<Tuple2<K, V>, IO<*>>? {
+        return database.take(count)
+    }
+
+    /**
+     * Starts the takeWhile function for this map.
+     * @param predicate the function
+     *
+     * @return the stream object for this map
+     */
+    fun takeWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): Stream<Tuple2<K, V>, IO<*>>? {
+        return database.takeWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+            override fun apply(tuple2: Tuple2<K, V>): Any {
+                return predicate(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
+            }
+        })
+    }
+
+    /**
+     * Starts the foreach function for this map.
+     * @param consumer the consumer
+     *
+     * @return the stream object for this map
+     */
+    fun foreach(consumer: Consumer<MutableMap.MutableEntry<K, V>>): Stream<BoxedUnit, IO<*>>? {
+        return database.foreach(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+            override fun apply(tuple2: Tuple2<K, V>): Any? {
+                consumer.accept(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
+                return null
+            }
+        })
+    }
+
+    /**
+     * Starts the filter function for this map.
+     * @param predicate the function
+     *
+     * @return the stream object for this map
+     */
+    fun filter(predicate: Predicate<MutableMap.MutableEntry<K, V>>): Stream<Tuple2<K, V>, IO<*>>? {
+        return database.filter(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+            override fun apply(tuple2: Tuple2<K, V>): Any {
+                return predicate.test(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
+            }
+        })
+    }
+
+    /**
+     * Closes the database.
+     */
     override fun close() {
         database.closeDatabase().get()
     }
 
+    /**
+     * Starts the commit function for this map.
+     * @param prepares the prepares
+     *
+     * @return the level zerro for this map
+     */
     fun commit(vararg prepares: Prepare<K, V>): Level0Meter {
         val preparesList = Arrays.asList(*prepares)
         val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
@@ -332,7 +701,7 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         private var compressDuplicateValues = `Map$`.`MODULE$`.`apply$default$6`<K, V>()
         private var deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, V>()
         private var groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, V>()
-        private var acceleration: scala.Function1<Level0Meter, Accelerator> = `Map$`.`MODULE$`.`apply$default$9`<K, V>()
+        private var acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, V>()
         private var keySerializer: Any? = null
         private var valueSerializer: Any? = null
 
@@ -376,7 +745,7 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
             return this
         }
 
-        fun withAcceleration(acceleration: scala.Function1<Level0Meter, Accelerator>): Builder<K, V> {
+        fun withAcceleration(acceleration: Function1<Level0Meter, Accelerator>): Builder<K, V> {
             this.acceleration = acceleration
             return this
         }
@@ -391,7 +760,6 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
             return this
         }
 
-        @Suppress("UNCHECKED_CAST")
         fun build(): Map<K, V> {
             val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, V>(mapSize, segmentSize,
                     cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
@@ -408,9 +776,17 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
         }
     }
 
-
     companion object {
-        @Suppress("UNCHECKED_CAST")
+
+        /**
+         * Creates the map.
+         * @param <K> the type of the key element
+         * @param <V> the type of the value element
+         * @param keySerializer the keySerializer
+         * @param valueSerializer the valueSerializer
+         *
+         * @return the map
+         */
         fun <K, V> create(keySerializer: Any, valueSerializer: Any): Map<K, V> {
             val mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, V>()
             val segmentSize = `Map$`.`MODULE$`.`apply$default$2`<K, V>()
@@ -421,12 +797,14 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
             val deleteSegmentsEventually = `Map$`.`MODULE$`.`apply$default$7`<K, V>()
             val groupingStrategy = `Map$`.`MODULE$`.`apply$default$8`<K, V>()
             val acceleration = `Map$`.`MODULE$`.`apply$default$9`<K, V>()
+
             val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, V>(mapSize, segmentSize,
                     cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
                     deleteSegmentsEventually, groupingStrategy, acceleration)
             val ec = `Map$`.`MODULE$`.`apply$default$13`<K, V>(mapSize, segmentSize, cacheSize,
                     cacheCheckDelay, bloomFilterFalsePositiveRate,
                     compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
+
             return Map(
                     `Map$`.`MODULE$`.apply(mapSize, segmentSize, cacheSize,
                             cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
@@ -434,6 +812,13 @@ class Map<K, V> private constructor(private val database: swaydb.Map<K, V, IO<*>
                             Serializer.classToType(valueSerializer), keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>)
         }
 
+        /**
+         * Creates the builder.
+         * @param <K> the type of the key element
+         * @param <V> the type of the value element
+         *
+         * @return the builder
+         */
         fun <K, V> builder(): Builder<K, V> {
             return Builder()
         }
