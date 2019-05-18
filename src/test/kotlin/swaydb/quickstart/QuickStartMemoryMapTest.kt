@@ -453,7 +453,7 @@ class QuickStartMemoryMapTest {
                 .withValueSerializer(String::class)
                 .build().use { db ->
                     db.put(1, "one")
-                    assertThat(db.asJava()?.size, equalTo(1))
+                    assertThat(db.asJava().size, equalTo(1))
                 }
     }
 

@@ -109,16 +109,6 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
     }
 
     /**
-     * Returns the typed array of elements in this set.
-     *
-     * @return the typed array of elements in this set
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T> toArray(a: Array<T>): Array<T> {
-        return toArray() as Array<T>
-    }
-
-    /**
      * Adds the key to this set.
      * @param key the key
      *

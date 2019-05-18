@@ -194,6 +194,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the head key for this map
      */
+    @Suppress("UNCHECKED_CAST")
     fun head(): MutableMap.MutableEntry<K, V>? {
         val result = database.headOption().get()
         if (result is scala.Some<*>) {
@@ -217,6 +218,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the last key for this map
      */
+    @Suppress("UNCHECKED_CAST")
     fun last(): MutableMap.MutableEntry<K, V>? {
         val result = database.lastOption().get()
         if (result is scala.Some<*>) {
@@ -301,6 +303,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the head key for this map
      */
+    @Suppress("UNCHECKED_CAST")
     fun keysHead(): K? {
         val result = database.keys().headOption().get()
         return if (result is scala.Some<*>) {
@@ -322,6 +325,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the last key for this map
      */
+    @Suppress("UNCHECKED_CAST")
     fun keysLast(): K? {
         val result = database.keys().lastOption().get()
         return if (result is scala.Some<*>) {
@@ -462,6 +466,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the value or null for key of this map
      */
+    @Suppress("UNCHECKED_CAST")
     operator fun get(key: K): V? {
         val result = database.get(key).get()
         return if (result is scala.Some<*>) {
@@ -760,6 +765,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
             return this
         }
 
+        @Suppress("UNCHECKED_CAST")
         fun build(): Map<K, V> {
             val keyOrder = `Map$`.`MODULE$`.`apply$default$12`<K, V>(mapSize, segmentSize,
                     cacheSize, cacheCheckDelay, bloomFilterFalsePositiveRate, compressDuplicateValues,
@@ -787,6 +793,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
          *
          * @return the map
          */
+        @Suppress("UNCHECKED_CAST")
         fun <K, V> create(keySerializer: Any, valueSerializer: Any): Map<K, V> {
             val mapSize = `Map$`.`MODULE$`.`apply$default$1`<K, V>()
             val segmentSize = `Map$`.`MODULE$`.`apply$default$2`<K, V>()
