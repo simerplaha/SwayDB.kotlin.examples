@@ -22,19 +22,14 @@ import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
-import scala.Tuple2
-import scala.collection.mutable.ListBuffer
-import scala.runtime.AbstractFunction1
 import swaydb.Prepare
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.kotlin.Apply
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.AbstractMap.SimpleEntry
-
-
+import java.util.concurrent.TimeUnit
 
 class QuickStartMemoryMapTest {
 
@@ -71,7 +66,7 @@ class QuickStartMemoryMapTest {
 
             // write 100 key-values atomically
             db.put((1..100)
-                    .map { index -> AbstractMap.SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
                     .map { it.key to it.value }
                     .toMap().toMutableMap())
 
@@ -79,6 +74,50 @@ class QuickStartMemoryMapTest {
             // and atomically write updated key-values
             db
                     .from(10)
+                    .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
+                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                    .materialize()
+                    .foreach({entry -> db.put(entry.key, entry.value)})
+            // assert the key-values were updated
+            (10..90)
+                    .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
+                    .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringFromOrAfter() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+            db
+                    .fromOrAfter(10)
+                    .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
+                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                    .materialize()
+                    .foreach({entry -> db.put(entry.key, entry.value)})
+            // assert the key-values were updated
+            (10..90)
+                    .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
+                    .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringFromOrBefore() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+            db
+                    .fromOrBefore(10)
                     .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
                     .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
                     .materialize()
