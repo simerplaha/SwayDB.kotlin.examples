@@ -30,6 +30,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.AbstractMap.SimpleEntry
 import java.util.concurrent.TimeUnit
+import swaydb.kotlin.ApacheSerializer
 
 class QuickStartMemoryMapTest {
 
@@ -608,4 +609,30 @@ class QuickStartMemoryMapTest {
                     assertThat<String>("Empty result", result2, nullValue())
                 }
     }
+
+    internal class MyData(var key: String, var value: String) : java.io.Serializable
+
+    @Test
+    fun memoryMapIntApacheSerializer() {
+
+        swaydb.kotlin.memory.Map
+                .builder<Int, MyData>()
+                .withKeySerializer(Int::class)
+                .withValueSerializer(ApacheSerializer<MyData>())
+                .build().use({ db ->
+                    // db.put(1, new MyData("one", "two")).get
+                    val myData = MyData("one", "two")
+                    db.put(1, myData)
+                    // db.get(1).get
+                    val result = db.get(1)
+                    assertThat("result contains value", result, notNullValue())
+                    assertThat(result?.key, equalTo("one"))
+                    assertThat(result?.value, equalTo("two"))
+                    // db.remove(1).get
+                    db.remove(1)
+                    val result2 = db.get(1)
+                    assertThat("Empty result", result2, nullValue())
+                })
+    }
+
 }
