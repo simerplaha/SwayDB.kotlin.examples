@@ -590,14 +590,15 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun map(function: UnaryOperator<MutableMap.MutableEntry<K, V>>): Stream<Any, IO<*>>? {
-        return database.map(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+    @Suppress("UNCHECKED_CAST")
+    fun map(function: UnaryOperator<MutableMap.MutableEntry<K, V>>): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.map(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 val result = function.apply(
                         AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
                 return Tuple2.apply<K, V>(result.key, result.value)
             }
-        })
+        }) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -606,8 +607,9 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun drop(count: Int): Stream<Tuple2<K, V>, IO<*>>? {
-        return database.drop(count)
+    @Suppress("UNCHECKED_CAST")
+    fun drop(count: Int): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.drop(count) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -616,12 +618,13 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun dropWhile(predicate: Predicate<MutableMap.MutableEntry<K, V>>): Stream<Tuple2<K, V>, IO<*>>? {
-        return database.dropWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+    @Suppress("UNCHECKED_CAST")
+    fun dropWhile(predicate: Predicate<MutableMap.MutableEntry<K, V>>): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.dropWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate.test(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
             }
-        })
+        }) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -630,8 +633,9 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun take(count: Int): Stream<Tuple2<K, V>, IO<*>>? {
-        return database.take(count)
+    @Suppress("UNCHECKED_CAST")
+    fun take(count: Int): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.take(count) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -640,12 +644,13 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun takeWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): Stream<Tuple2<K, V>, IO<*>>? {
-        return database.takeWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+    @Suppress("UNCHECKED_CAST")
+    fun takeWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.takeWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
             }
-        })
+        }) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -654,13 +659,14 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun foreach(consumer: Consumer<MutableMap.MutableEntry<K, V>>): Stream<BoxedUnit, IO<*>>? {
-        return database.foreach(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+    @Suppress("UNCHECKED_CAST")
+    fun foreach(consumer: Consumer<MutableMap.MutableEntry<K, V>>): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.foreach(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any? {
                 consumer.accept(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
                 return null
             }
-        })
+        }) as swaydb.Stream<K, V>)
     }
 
     /**
@@ -669,12 +675,13 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the stream object for this map
      */
-    fun filter(predicate: Predicate<MutableMap.MutableEntry<K, V>>): Stream<Tuple2<K, V>, IO<*>>? {
-        return database.filter(object : AbstractFunction1<Tuple2<K, V>, Any>() {
+    @Suppress("UNCHECKED_CAST")
+    fun filter(predicate: Predicate<MutableMap.MutableEntry<K, V>>): swaydb.kotlin.Stream<K, V> {
+        return swaydb.kotlin.Stream(database.filter(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate.test(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
             }
-        })
+        }) as swaydb.Stream<K, V>)
     }
 
     /**

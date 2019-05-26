@@ -23,8 +23,6 @@ import scala.collection.mutable.ListBuffer
 import scala.runtime.AbstractFunction1
 import swaydb.data.IO
 import java.util.*
-import java.util.function.Consumer
-import java.util.function.UnaryOperator
 
 /**
  * The Stream of data.
@@ -34,7 +32,7 @@ import java.util.function.UnaryOperator
  */
 class Stream<K, V> {
     private val streamObject: swaydb.Stream<K, V>?
-    private val success: IO.Success<Tuple2<K, V>>?
+    private val success: IO.Success<ListBuffer<*>>?
 
     /**
      * Constructs the Stream object.
@@ -49,7 +47,7 @@ class Stream<K, V> {
      * Constructs the Stream object.
      * @param success the success
      */
-    private constructor(success: IO.Success<Tuple2<K, V>>) {
+    private constructor(success: IO.Success<ListBuffer<*>>) {
         this.streamObject = null
         this.success = success
     }
@@ -61,10 +59,10 @@ class Stream<K, V> {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun map(function: UnaryOperator<MutableMap.MutableEntry<K, V>>): Stream<K, V> {
+    fun map(function: (MutableMap.MutableEntry<K, V>) -> MutableMap.MutableEntry<K, V>): Stream<K, V> {
         return Stream(streamObject?.map(object : AbstractFunction1<K, Any?>() {
             override fun apply(tuple2: K): Any? {
-                val result = function.apply(
+                val result = function(
                         AbstractMap.SimpleEntry<K, V>((tuple2 as Tuple2<K, V>)._1(), (tuple2 as Tuple2<K, V>)._2()))
                 return IO.`Success$`.`MODULE$`.apply(Tuple2.apply(result.key, result.value))
             }
@@ -78,7 +76,7 @@ class Stream<K, V> {
      */
     @Suppress("UNCHECKED_CAST")
     fun materialize(): Stream<K, V> {
-        return Stream(streamObject?.materialize() as IO.Success<Tuple2<K, V>>)
+        return Stream(streamObject?.materialize() as IO.Success<ListBuffer<*>>)
     }
 
     /**
@@ -88,18 +86,18 @@ class Stream<K, V> {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun foreach(consumer: Consumer<MutableMap.MutableEntry<K, V>>): Stream<K, V> {
-        success?.foreach(object : AbstractFunction1<Tuple2<K, V>, Any?>() {
-            override fun apply(t1: Tuple2<K, V>): Any? {
-                val entries = (t1 as ListBuffer<*>).seq()
+    fun foreach(consumer: (MutableMap.MutableEntry<K, V>) -> Unit): Stream<K, V> {
+        success?.foreach(object : AbstractFunction1<ListBuffer<*>, Any?>() {
+            override fun apply(t1: ListBuffer<*>): Any? {
+                val entries = t1.seq()
                 var index = 0
                 while (index < entries.size()) {
                     if (entries.apply(index) is Tuple2<*, *>) {
                         val tuple2 = entries.apply(index) as Tuple2<K, V>
-                        consumer.accept(AbstractMap.SimpleEntry<K, V>(tuple2._1(), tuple2._2()))
+                        consumer(AbstractMap.SimpleEntry<K, V>(tuple2._1(), tuple2._2()))
                     } else {
                         val tuple2 = entries.apply(index) as IO.Success<Tuple2<K, V>>
-                        consumer.accept(AbstractMap.SimpleEntry<K, V>(tuple2.get()._1(), tuple2.get()._2()))
+                        consumer(AbstractMap.SimpleEntry<K, V>(tuple2.get()._1(), tuple2.get()._2()))
                     }
                     index += 1
                 }

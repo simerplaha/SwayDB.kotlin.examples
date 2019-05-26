@@ -32,6 +32,9 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.AbstractMap.SimpleEntry
+
+
 
 class QuickStartMemoryMapTest {
 
@@ -74,26 +77,15 @@ class QuickStartMemoryMapTest {
 
             // Iteration: fetch all key-values withing range 10 to 90, update values
             // and atomically write updated key-values
-            (db
+            db
                     .from(10)
                     .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
-                    ?.map(object : AbstractFunction1<Tuple2<Int, String>, Any>() {
-                        override fun apply(t1: Tuple2<Int, String>): Any {
-                            val key = t1._1() as Int
-                            val value = t1._2() as String
-                            return Tuple2.apply(key, value + "_updated")
-                        }
-                    })
-                    ?.materialize() as swaydb.data.IO.Success<ListBuffer<*>>)
-                    .foreach(object : AbstractFunction1<ListBuffer<*>, Any>() {
-                        override fun apply(t1: ListBuffer<*>): Any? {
-                            db.put(t1.seq())
-                            return null
-                        }
-                    })
+                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                    .materialize()
+                    .foreach({entry -> db.put(entry.key, entry.value)})
             // assert the key-values were updated
             (10..90)
-                    .map { item -> AbstractMap.SimpleEntry<Int, String>(item, db.get(item)) }
+                    .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
                     .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
         })
     }
