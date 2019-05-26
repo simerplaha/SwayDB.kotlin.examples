@@ -25,10 +25,8 @@ import scala.collection.JavaConverters
 import scala.concurrent.duration.Deadline
 import scala.concurrent.duration.FiniteDuration
 import scala.runtime.AbstractFunction1
-import scala.runtime.BoxedUnit
 import swaydb.Apply
 import swaydb.Prepare
-import swaydb.Stream
 import swaydb.data.IO
 import swaydb.data.accelerate.Accelerator
 import swaydb.data.accelerate.Level0Meter
@@ -42,7 +40,6 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
-import java.util.function.Function
 import java.util.function.Predicate
 import java.util.function.UnaryOperator
 
@@ -286,7 +283,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the key set for this map
      */
-    fun keySet(): Set<K> {
+    fun keySet(): MutableSet<K> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<K>()
         var index = 0
@@ -364,7 +361,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the entrues last key for this map
      */
-    fun entrySet(): Set<MutableMap.MutableEntry<K, V>> {
+    fun entrySet(): MutableSet<MutableMap.MutableEntry<K, V>> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<MutableMap.MutableEntry<K, V>>()
         var index = 0
@@ -490,7 +487,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * Removes the values for key set of this map.
      * @param keys the keys
      */
-    fun remove(keys: Set<K>) {
+    fun remove(keys: MutableSet<K>) {
         database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get()
     }
 

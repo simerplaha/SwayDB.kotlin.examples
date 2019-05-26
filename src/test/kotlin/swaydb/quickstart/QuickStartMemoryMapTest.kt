@@ -23,6 +23,7 @@ import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 import swaydb.Prepare
+import swaydb.base.TestBase
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.slice.Slice
 import swaydb.kotlin.Apply
@@ -33,7 +34,7 @@ import java.util.AbstractMap.SimpleEntry
 import java.util.concurrent.TimeUnit
 import swaydb.kotlin.ApacheSerializer
 
-class QuickStartMemoryMapTest {
+class QuickStartMemoryMapTest : TestBase() {
 
     @Suppress("UNCHECKED_CAST")
     @Test
@@ -355,7 +356,7 @@ class QuickStartMemoryMapTest {
                 .build().use { db ->
                     db.put(1, "one", LocalDateTime.now().plusNanos(TimeUnit.MILLISECONDS.toNanos(200)))
                     assertThat(db.entrySet().toString(), equalTo("[1=one]"))
-                    await().atMost(2400, TimeUnit.MILLISECONDS).until {
+                    await().atMost(2800, TimeUnit.MILLISECONDS).until {
                         assertThat(db.get(1), nullValue())
                         true
                     }

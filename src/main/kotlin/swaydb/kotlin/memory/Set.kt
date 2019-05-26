@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with SwayDB. If not, see <https://www.gnu.org/licenses/>.
  */
-package swaydb.java.memory
+package swaydb.kotlin.memory
 
 import scala.Function1
 import scala.Option
