@@ -24,6 +24,7 @@ import org.junit.Assert.assertThat
 import org.junit.Test
 import swaydb.Prepare
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
+import swaydb.data.slice.Slice
 import swaydb.kotlin.Apply
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -608,6 +609,76 @@ class QuickStartMemoryMapTest {
                     val result2 = db.get(1)
                     assertThat<String>("Empty result", result2, nullValue())
                 }
+    }
+
+    internal class MyData1(key:String, value:String,
+                          longValue:Long, byteValue:Byte, boolValue:Boolean) {
+        var key:String
+        var value:String
+        var longValue:Long = 0
+        var byteValue:Byte = 0
+        var boolValue:Boolean = false
+        init{
+            this.key = key
+            this.value = value
+            this.longValue = longValue
+            this.byteValue = byteValue
+            this.boolValue = boolValue
+        }
+    }
+
+    internal class MyDataSerializer:swaydb.serializers.Serializer<MyData1> {
+        override fun write(data:MyData1): Slice<Any> {
+            return swaydb.kotlin.Slice.create(4 + data.key.length + 4 + data.value.length + 10)
+                    .addInt(data.key.length)
+                    .addString(data.key)
+                    .addInt(data.value.length)
+                    .addString(data.value)
+                    .addLong(data.longValue)
+                    .addByte(data.byteValue)
+                    .addBoolean(data.boolValue)
+                    .close()
+        }
+        override fun read(data: Slice<Any>):MyData1 {
+            val reader = swaydb.kotlin.BytesReader.create(data)
+            val keyLength = reader.readInt()
+            val key = reader.readString(keyLength)
+            val valueLength = reader.readInt()
+            val value = reader.readString(valueLength)
+            val longValue = reader.readLong()
+            val byteValue = reader.readByte()
+            val boolValue = reader.readBoolean()
+            return MyData1(key, value, longValue, byteValue, boolValue)
+        }
+    }
+
+    @Test
+    fun memoryMapIntCustom() {
+        swaydb.kotlin.memory.Map
+                .builder<Int, MyData1>()
+                .withKeySerializer(Int::class)
+                .withValueSerializer(MyDataSerializer())
+                .build().use({ db ->
+                    // db.put(1, new MyData("one", "two")).get
+                    val myData = MyData1("one", "two", 10L, 100.toByte(), true)
+                    db.put(1, myData)
+                    // db.get(1).get
+                    val result = db.get(1)
+                    assertThat("result contains value", result, notNullValue())
+                    assertThat(result?.key, equalTo("one"))
+                    assertThat(result?.value, equalTo("two"))
+                    assertThat(result?.longValue, equalTo(10L))
+                    assertThat(result?.byteValue, equalTo(100.toByte()))
+                    assertThat(result?.boolValue, equalTo(true))
+                    // db.remove(1).get
+                    db.remove(1)
+                    val result2 = db.get(1)
+                    assertThat("Empty result", result2, nullValue())
+                    val myData2 = MyData1("one", "two", 10L, 100.toByte(), false)
+                    db.put(1, myData2)
+                    val result3 = db.get(1)
+                    assertThat(result3?.boolValue, equalTo(false))
+                })
     }
 
     internal class MyData(var key: String, var value: String) : java.io.Serializable
