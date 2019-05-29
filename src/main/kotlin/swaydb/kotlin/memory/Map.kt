@@ -254,12 +254,11 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
     }
 
     /**
-     * Puts a seq object to this map.
-     * @param seq the seq
+     * Puts an entry object to this map.
+     * @param entry the entry
      */
-    @Suppress("UNCHECKED_CAST")
-    fun put(seq: scala.collection.Seq<*>) {
-        database.put(seq as scala.collection.Seq<Tuple2<K, V>>)
+    fun put(entry: MutableMap.MutableEntry<K, V>) {
+        database.put(entry.key, entry.value).get()
     }
 
     /**

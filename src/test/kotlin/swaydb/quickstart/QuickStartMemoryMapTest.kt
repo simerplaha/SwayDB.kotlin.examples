@@ -84,7 +84,7 @@ class QuickStartMemoryMapTest : TestBase() {
                     .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
                     .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
                     .materialize()
-                    .foreach({entry -> db.put(entry.key, entry.value)})
+                    .foreach({entry -> db.put(entry)})
             // assert the key-values were updated
             (10..90)
                     .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
@@ -106,7 +106,7 @@ class QuickStartMemoryMapTest : TestBase() {
                     .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
                     .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
                     .materialize()
-                    .foreach({entry -> db.put(entry.key, entry.value)})
+                    .foreach({entry -> db.put(entry)})
             // assert the key-values were updated
             (10..90)
                     .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
@@ -128,7 +128,7 @@ class QuickStartMemoryMapTest : TestBase() {
                     .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
                     .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
                     .materialize()
-                    .foreach({entry -> db.put(entry.key, entry.value)})
+                    .foreach({entry -> db.put(entry)})
             // assert the key-values were updated
             (10..90)
                     .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
@@ -257,7 +257,7 @@ class QuickStartMemoryMapTest : TestBase() {
                     .dropWhile({ item -> item.key < 10 })
                     .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
                     .materialize()
-                    .foreach({entry -> db.put(entry.key, entry.value)})
+                    .foreach({entry -> db.put(entry)})
             // assert the key-values were updated
             IntStream.rangeClosed(10, 90)
                     .mapToObj<SimpleEntry<Int, String?>> { item -> SimpleEntry(item, db.get(item)) }
