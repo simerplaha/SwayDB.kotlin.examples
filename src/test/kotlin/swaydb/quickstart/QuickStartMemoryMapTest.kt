@@ -22,17 +22,21 @@ import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
+import scala.collection.mutable.ListBuffer
+import scala.runtime.AbstractFunction1
 import swaydb.Prepare
 import swaydb.base.TestBase
+import swaydb.data.IO
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.slice.Slice
+import swaydb.kotlin.ApacheSerializer
 import swaydb.kotlin.Apply
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.AbstractMap.SimpleEntry
 import java.util.concurrent.TimeUnit
-import swaydb.kotlin.ApacheSerializer
+import java.util.stream.IntStream
 
 class QuickStartMemoryMapTest : TestBase() {
 
@@ -129,6 +133,191 @@ class QuickStartMemoryMapTest : TestBase() {
             (10..90)
                     .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
                     .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+        })
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun memoryMapIntStringKeys() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<Int>()
+            (db
+                    .keys()
+                    .reverse()
+                    .fromOrBefore(10)
+                    .take(5)
+                    .materialize() as IO.Success<ListBuffer<*>>)
+                    .foreach(object : AbstractFunction1<ListBuffer<*>, Any?>() {
+                        override fun apply(t1: ListBuffer<*>): Any? {
+                            val entries = t1.seq()
+                            var index = 0
+                            while (index < entries.size()) {
+                                result.add(entries.apply(index) as Int)
+                                index += 1
+                            }
+                            return null
+                        }
+                    })
+            assertThat(result.toString(), equalTo("[10, 9, 8, 7, 6]"))
+        })
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun memoryMapIntStringReverse() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<Int>()
+            (db
+                    .reverse()
+                    .keys()
+                    .fromOrBefore(10)
+                    .take(5)
+                    .materialize() as IO.Success<ListBuffer<*>>)
+                    .foreach(object : AbstractFunction1<ListBuffer<*>, Any?>() {
+                        override fun apply(t1: ListBuffer<*>): Any? {
+                            val entries = t1.seq()
+                            var index = 0
+                            while (index < entries.size()) {
+                                result.add(entries.apply(index) as Int)
+                                index += 1
+                            }
+                            return null
+                        }
+                    })
+            assertThat(result.toString(), equalTo("[10, 9, 8, 7, 6]"))
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringMap() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<MutableMap.MutableEntry<Int, String>>()
+            db
+                    .map{ item -> SimpleEntry(item.key, item.value + "_updated") }
+                    .materialize()
+                    .foreach({entry -> result.add(entry)})
+            assertThat(result.toString(), equalTo("[1=1_updated, 2=2_updated, 3=3_updated,"
+                    + " 4=4_updated, 5=5_updated, 6=6_updated, 7=7_updated, 8=8_updated,"
+                    + " 9=9_updated, 10=10_updated]"))
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringDrop() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<MutableMap.MutableEntry<Int, String>>()
+            db
+                    .drop(5)
+                    .materialize()
+                    .foreach({entry -> result.add(entry)})
+            assertThat(result.toString(), equalTo("[6=6, 7=7, 8=8, 9=9, 10=10]"))
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringDropWhile() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            db
+                    .from(1)
+                    .dropWhile({ item -> item.key < 10 })
+                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                    .materialize()
+                    .foreach({entry -> db.put(entry.key, entry.value)})
+            // assert the key-values were updated
+            IntStream.rangeClosed(10, 90)
+                    .mapToObj<SimpleEntry<Int, String?>> { item -> SimpleEntry(item, db.get(item)) }
+                    .forEach { pair -> assertThat(pair.value?.endsWith("_updated"), equalTo(true)) }
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringTake() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<MutableMap.MutableEntry<Int, String>>()
+            db
+                    .take(5)
+                    .materialize()
+                    .foreach({entry -> result.add(entry)})
+            assertThat(result.toString(), equalTo("[1=1, 2=2, 3=3, 4=4, 5=5]"))
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringFilter() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<MutableMap.MutableEntry<Int, String>>()
+            db
+                    .filter({ item -> item.key < 5 })
+                    .materialize()
+                    .foreach({entry -> result.add(entry)})
+            assertThat(result.toString(), equalTo("[1=1, 2=2, 3=3, 4=4]"))
+        })
+    }
+
+    @Test
+    fun memoryMapIntStringForeach() {
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+            // write 10 key-values atomically
+            db.put((1..10)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            val result = LinkedHashSet<MutableMap.MutableEntry<Int, String>>()
+            db
+                    .foreach({entry -> result.add(entry)})
+                    .materialize()
+            assertThat(result.toString(), equalTo("[1=1, 2=2, 3=3, 4=4, 5=5, 6=6, 7=7, 8=8, 9=9, 10=10]"))
         })
     }
 
