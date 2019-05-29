@@ -38,7 +38,7 @@ class Stream<K, V> {
      * Constructs the Stream object.
      * @param streamObject the streamObject
      */
-    constructor(streamObject: swaydb.Stream<K, V>) {
+    constructor(streamObject: swaydb.Stream<K, V>?) {
         this.streamObject = streamObject
         this.success = null
     }
