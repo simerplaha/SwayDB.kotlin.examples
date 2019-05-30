@@ -6,3 +6,71 @@
 
 Kotlin wrapper for [SwayDB](https://github.com/simerplaha/SwayDB).
 
+Requirements
+============
+
+Kotlin 1.3 and later.
+
+## Installation
+
+Include the following in your `pom.xml` for Maven:
+
+```
+<dependencies>
+  <dependency>
+    <groupId>com.github.javadev</groupId>
+    <artifactId>swaydb-kotlin</artifactId>
+    <version>0.8-beta.8</version>
+  </dependency>
+  ...
+</dependencies>
+```
+
+Gradle:
+
+```groovy
+compile 'com.github.javadev:swaydb-kotlin:0.8-beta.8'
+```
+
+### Usage
+
+```kotlin
+import java.util.AbstractMap.SimpleEntry
+
+import static org.hamcrest.CoreMatchers.equalTo
+import static org.junit.Assert.assertThat
+
+import org.junit.Test
+
+class QuickStartTest {
+
+    @Test
+    fun quickStart() {
+        // Create a memory database
+        // val db = memory.Map[Int, String]().get
+        swaydb.kotlin.memory.Map.create<Int, String>(
+                Int::class, String::class).use({ db ->
+
+            // write 100 key-values atomically
+            db.put((1..100)
+                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                    .map { it.key to it.value }
+                    .toMap().toMutableMap())
+
+            // Iteration: fetch all key-values withing range 10 to 90, update values
+            // and atomically write updated key-values
+            db
+                    .from(10)
+                    .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
+                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                    .materialize()
+                    .foreach({entry -> db.put(entry)})
+
+            // assert the key-values were updated
+            (10..90)
+                    .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
+                    .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+        })
+    }
+}
+```
