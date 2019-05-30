@@ -39,9 +39,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
-import java.util.function.Predicate
-import java.util.function.UnaryOperator
 
 /**
  * The memory Map of data.
@@ -49,14 +46,14 @@ import java.util.function.UnaryOperator
  * @param <K> the type of the key element
  * @param <V> the type of the value element
  */
-class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
+class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.Map<K,V>, Closeable {
 
     /**
      * Checks the map is empty.
      *
      * @return `true` if a map is empty, `false` otherwise
      */
-    fun isEmpty(): Boolean {
+    override fun isEmpty(): Boolean {
         return database.isEmpty().get() as Boolean
     }
 
@@ -65,7 +62,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the size of elements in this map
      */
-    fun size(): Int {
+    override fun size(): Int {
         return database.asScala().size()
     }
 
@@ -74,7 +71,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return `true` if a map is not empty, `false` otherwise
      */
-    fun nonEmpty(): Boolean {
+    override fun nonEmpty(): Boolean {
         return database.nonEmpty().get() as Boolean
     }
 
@@ -84,7 +81,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the expiration date for key in this map
      */
-    fun expiration(key: K): LocalDateTime? {
+    override fun expiration(key: K): LocalDateTime? {
         val result = database.expiration(key).get()
         if (result is scala.Some<*>) {
             val expiration = result.get() as Deadline
@@ -99,7 +96,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the time left for key in this map
      */
-    fun timeLeft(key: K): Duration? {
+    override fun timeLeft(key: K): Duration? {
         val result = database.timeLeft(key).get()
         if (result is scala.Some<*>) {
             val duration = result.get() as FiniteDuration
@@ -114,7 +111,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the key size in bytes for this map
      */
-    fun keySize(key: K): Int {
+    override fun keySize(key: K): Int {
         return database.keySize(key)
     }
 
@@ -124,7 +121,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the value size in bytes for this map
      */
-    fun valueSize(value: V): Int {
+    override fun valueSize(value: V): Int {
         return database.valueSize(value)
     }
 
@@ -133,7 +130,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the size for segments for this map
      */
-    fun sizeOfSegments(): Long {
+    override fun sizeOfSegments(): Long {
         return database.sizeOfSegments()
     }
 
@@ -142,7 +139,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the level of meter for zerro level
      */
-    fun level0Meter(): Level0Meter {
+    override fun level0Meter(): Level0Meter {
         return database.level0Meter()
     }
 
@@ -161,7 +158,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the level of meter for first level
      */
-    fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
+    override fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
         val levelMeter = database.levelMeter(levelNumber)
         return if (levelMeter.isEmpty) Optional.empty() else Optional.ofNullable(levelMeter.get())
     }
@@ -172,7 +169,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return `true` if a map contains key, `false` otherwise
      */
-    fun containsKey(key: K): Boolean {
+    override fun containsKey(key: K): Boolean {
         return database.contains(key).get() as Boolean
     }
 
@@ -182,7 +179,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return `true` if a map might contains key, `false` otherwise
      */
-    fun mightContain(key: K): Boolean {
+    override fun mightContain(key: K): Boolean {
         return database.mightContain(key).get() as Boolean
     }
 
@@ -192,7 +189,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the head key for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun head(): MutableMap.MutableEntry<K, V>? {
+    override fun head(): MutableMap.MutableEntry<K, V>? {
         val result = database.headOption().get()
         if (result is scala.Some<*>) {
             val tuple2 = result.get() as Tuple2<K, V>
@@ -206,7 +203,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the optional head key for this map
      */
-    fun headOption(): Optional<MutableMap.MutableEntry<K, V>> {
+    override fun headOption(): Optional<MutableMap.MutableEntry<K, V>> {
         return Optional.ofNullable(head())
     }
 
@@ -216,7 +213,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the last key for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun last(): MutableMap.MutableEntry<K, V>? {
+    override fun last(): MutableMap.MutableEntry<K, V>? {
         val result = database.lastOption().get()
         if (result is scala.Some<*>) {
             val tuple2 = result.get() as Tuple2<K, V>
@@ -230,7 +227,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the optional last key for this map
      */
-    fun lastOption(): Optional<MutableMap.MutableEntry<K, V>> {
+    override fun lastOption(): Optional<MutableMap.MutableEntry<K, V>> {
         return Optional.ofNullable(last())
     }
 
@@ -240,7 +237,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return `true` if a map contains value, `false` otherwise
      */
-    fun containsValue(value: V): Boolean {
+    override fun containsValue(value: V): Boolean {
         return values().contains(value)
     }
 
@@ -248,7 +245,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * Puts a map object to this map.
      * @param map the map
      */
-    fun put(map: MutableMap<K, V>) {
+    override fun put(map: MutableMap<K, V>) {
         val entries = scala.collection.JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.put(entries.toSet()).get()
     }
@@ -257,7 +254,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * Puts an entry object to this map.
      * @param entry the entry
      */
-    fun put(entry: MutableMap.MutableEntry<K, V>) {
+    override fun put(entry: MutableMap.MutableEntry<K, V>) {
         database.put(entry.key, entry.value).get()
     }
 
@@ -265,7 +262,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * Updates map entries for this map.
      * @param map the map
      */
-    fun update(map: MutableMap<K, V>) {
+    override fun update(map: MutableMap<K, V>) {
         val entries = scala.collection.JavaConverters.mapAsScalaMapConverter<K, V>(map).asScala()
         database.update(entries.toSet()).get()
     }
@@ -273,7 +270,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
     /**
      * Clears this map.
      */
-    fun clear() {
+    override fun clear() {
         database.asScala().clear()
     }
 
@@ -282,7 +279,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the key set for this map
      */
-    fun keySet(): MutableSet<K> {
+    override fun keySet(): MutableSet<K> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<K>()
         var index = 0
@@ -300,7 +297,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the head key for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun keysHead(): K? {
+    override fun keysHead(): K? {
         val result = database.keys().headOption().get()
         return if (result is scala.Some<*>) {
             result.get() as K
@@ -312,7 +309,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the optional head key for this map
      */
-    fun keysHeadOption(): Optional<K> {
+    override fun keysHeadOption(): Optional<K> {
         return Optional.ofNullable(keysHead())
     }
 
@@ -322,7 +319,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the last key for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun keysLast(): K? {
+    override fun keysLast(): K? {
         val result = database.keys().lastOption().get()
         return if (result is scala.Some<*>) {
             result.get() as K
@@ -334,7 +331,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the optional last key for this map
      */
-    fun keysLastOption(): Optional<K> {
+    override fun keysLastOption(): Optional<K> {
         return Optional.ofNullable(keysLast())
     }
 
@@ -343,7 +340,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the values last key for this map
      */
-    fun values(): List<V> {
+    override fun values(): List<V> {
         val entries = database.asScala().toSeq()
         val result = ArrayList<V>()
         var index = 0
@@ -360,7 +357,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the entrues last key for this map
      */
-    fun entrySet(): MutableSet<MutableMap.MutableEntry<K, V>> {
+    override fun entrySet(): MutableSet<MutableMap.MutableEntry<K, V>> {
         val entries = database.asScala().toSeq()
         val result = LinkedHashSet<MutableMap.MutableEntry<K, V>>()
         var index = 0
@@ -379,7 +376,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun put(key: K, value: V): V? {
+    override fun put(key: K, value: V): V? {
         val oldValue = get(key)
         database.put(key, value).get()
         return oldValue
@@ -394,7 +391,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun put(key: K, value: V, expireAfter: Long, timeUnit: TimeUnit): V? {
+    override fun put(key: K, value: V, expireAfter: Long, timeUnit: TimeUnit): V? {
         val oldValue = get(key)
         database.put(key, value, FiniteDuration.create(expireAfter, timeUnit)).get()
         return oldValue
@@ -408,7 +405,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun put(key: K, value: V, expireAt: LocalDateTime): V? {
+    override fun put(key: K, value: V, expireAt: LocalDateTime): V? {
         val oldValue = get(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         database.put(key, value, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
@@ -423,7 +420,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun expire(key: K, after: Long, timeUnit: TimeUnit): V? {
+    override fun expire(key: K, after: Long, timeUnit: TimeUnit): V? {
         val oldValue = get(key)
         database.expire(key, FiniteDuration.create(after, timeUnit)).get()
         return oldValue
@@ -436,7 +433,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun expire(key: K, expireAt: LocalDateTime): V? {
+    override fun expire(key: K, expireAt: LocalDateTime): V? {
         val oldValue = get(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         database.expire(key, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
@@ -450,7 +447,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun update(key: K, value: V): V? {
+    override fun update(key: K, value: V): V? {
         val oldValue = get(key)
         database.update(key, value).get()
         return oldValue
@@ -463,7 +460,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the value or null for key of this map
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun get(key: K): V? {
+    override operator fun get(key: K): V? {
         val result = database.get(key).get()
         return if (result is scala.Some<*>) {
             result.get() as V
@@ -476,7 +473,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the old value or null for key of this map
      */
-    fun remove(key: K): V? {
+    override fun remove(key: K): V? {
         val oldValue = get(key)
         database.remove(key).get()
         return oldValue
@@ -486,7 +483,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * Removes the values for key set of this map.
      * @param keys the keys
      */
-    fun remove(keys: MutableSet<K>) {
+    override fun remove(keys: MutableSet<K>) {
         database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get()
     }
 
@@ -495,7 +492,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @param from the from
      * @param to the to
      */
-    fun remove(from: K, to: K) {
+    override fun remove(from: K, to: K) {
         database.remove(from, to).get()
     }
 
@@ -504,7 +501,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the java map of this map
      */
-    fun asJava(): MutableMap<K, V> {
+    override fun asJava(): MutableMap<K, V> {
         return JavaConverters.mapAsJavaMapConverter(database.asScala()).asJava()
     }
 
@@ -515,7 +512,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the function id
      */
-    fun registerFunction(functionId: K, function: (V) -> Apply.Map<V>): K {
+    override fun registerFunction(functionId: K, function: (V) -> Apply.Map<V>): K {
         return database.registerFunction(functionId, object : AbstractFunction1<V, Apply.Map<V>>() {
             override fun apply(value: V): Apply.Map<V> {
                 return function(value)
@@ -528,7 +525,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @param key the key
      * @param functionId the functionId
      */
-    fun applyFunction(key: K, functionId: K) {
+    override fun applyFunction(key: K, functionId: K) {
         database.applyFunction(key, functionId)
     }
 
@@ -538,7 +535,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the map object
      */
-    fun from(key: K): Map<K, V> {
+    override fun from(key: K): Map<K, V> {
         return Map(database.from(key))
     }
 
@@ -548,7 +545,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the map object
      */
-    fun fromOrAfter(key: K): Map<K, V> {
+    override fun fromOrAfter(key: K): Map<K, V> {
         return Map(database.fromOrAfter(key))
     }
 
@@ -558,7 +555,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the map object
      */
-    fun fromOrBefore(key: K): Map<K, V> {
+    override fun fromOrBefore(key: K): Map<K, V> {
         return Map(database.fromOrBefore(key))
     }
 
@@ -567,7 +564,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the key objects for this map
      */
-    fun keys(): swaydb.Set<K, IO<*>> {
+    override fun keys(): swaydb.Set<K, IO<*>> {
         return database.keys()
     }
 
@@ -576,7 +573,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the reversed map object for this map
      */
-    fun reverse(): Map<K, V> {
+    override fun reverse(): Map<K, V> {
         return Map(database.reverse())
     }
 
@@ -587,7 +584,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun map(function: (MutableMap.MutableEntry<K, V>) -> MutableMap.MutableEntry<K, V>): swaydb.kotlin.Stream<K, V> {
+    override fun map(function: (MutableMap.MutableEntry<K, V>) -> MutableMap.MutableEntry<K, V>): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.map(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 val result = function(
@@ -604,7 +601,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun drop(count: Int): swaydb.kotlin.Stream<K, V> {
+    override fun drop(count: Int): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.drop(count) as swaydb.Stream<K, V>)
     }
 
@@ -615,7 +612,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun dropWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
+    override fun dropWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.dropWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
@@ -630,7 +627,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun take(count: Int): swaydb.kotlin.Stream<K, V> {
+    override fun take(count: Int): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.take(count) as swaydb.Stream<K, V>)
     }
 
@@ -641,7 +638,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun takeWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
+    override fun takeWhile(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.takeWhile(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
@@ -656,7 +653,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun foreach(consumer: (MutableMap.MutableEntry<K, V>) -> Unit): swaydb.kotlin.Stream<K, V> {
+    override fun foreach(consumer: (MutableMap.MutableEntry<K, V>) -> Unit): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.foreach(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any? {
                 consumer(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
@@ -672,7 +669,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      * @return the stream object for this map
      */
     @Suppress("UNCHECKED_CAST")
-    fun filter(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
+    override fun filter(predicate: (MutableMap.MutableEntry<K, V>) -> Boolean): swaydb.kotlin.Stream<K, V> {
         return swaydb.kotlin.Stream(database.filter(object : AbstractFunction1<Tuple2<K, V>, Any>() {
             override fun apply(tuple2: Tuple2<K, V>): Any {
                 return predicate(AbstractMap.SimpleEntry(tuple2._1(), tuple2._2()))
@@ -693,7 +690,7 @@ class Map<K, V> (private val database: swaydb.Map<K, V, IO<*>>) : Closeable {
      *
      * @return the level zerro for this map
      */
-    fun commit(vararg prepares: Prepare<K, V>): Level0Meter {
+    override fun commit(vararg prepares: Prepare<K, V>): Level0Meter {
         val preparesList = Arrays.asList(*prepares)
         val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
         return database.commit(prepareIterator).get() as Level0Meter
