@@ -344,7 +344,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the java set of this set
      */
-    fun asJava(): MutableSet<K>? {
+    fun asJava(): MutableSet<K> {
         return JavaConverters.setAsJavaSetConverter(database.asScala()).asJava()
     }
 

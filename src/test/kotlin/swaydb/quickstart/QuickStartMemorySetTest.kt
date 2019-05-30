@@ -318,7 +318,7 @@ class QuickStartMemorySetTest : TestBase() {
                 .withKeySerializer(Int::class)
                 .build().use { db ->
                     db.add(1)
-                    assertThat(db.asJava()!!.size, equalTo(1))
+                    assertThat(db.asJava().size, equalTo(1))
                 }
     }
 
