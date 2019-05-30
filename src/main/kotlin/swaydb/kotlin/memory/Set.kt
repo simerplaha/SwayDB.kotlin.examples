@@ -44,13 +44,13 @@ import java.util.function.Consumer
  *
  * @param <K> the type of the key element
  */
-class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
+class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>, Closeable {
     /**
      * Checks if a set is empty.
      *
      * @return {@code true} if a set is empty, {@code false} otherwise
      */
-    val isEmpty: Boolean
+    override val isEmpty: Boolean
         get() {
             return database.isEmpty().get() as Boolean
         }
@@ -61,7 +61,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contains key, {@code false} otherwise
      */
-    fun contains(key: K): Boolean {
+    override fun contains(key: K): Boolean {
         return database.contains(key).get() as Boolean
     }
 
@@ -71,7 +71,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set might contains key, {@code false} otherwise
      */
-    fun mightContain(key: K): Boolean {
+    override fun mightContain(key: K): Boolean {
         return database.mightContain(key).get() as Boolean
     }
 
@@ -80,7 +80,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the iterator of elements in this set
      */
-    fun iterator(): Iterator<K> {
+    override fun iterator(): Iterator<K> {
         val entries = database.asScala().toSeq()
         val result = ArrayList<K>()
         var index = 0
@@ -97,7 +97,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      * @return the array of elements in this set
      */
     @Suppress("UNCHECKED_CAST")
-    fun toArray(): Array<K> {
+    override fun toArray(): Array<K> {
         val entries = database.asScala().toSeq()
         val result = ArrayList<K>()
         var index = 0
@@ -114,7 +114,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contained key, {@code false} otherwise
      */
-    fun add(key: K): Boolean {
+    override fun add(key: K): Boolean {
         val result = database.add(key).get()
         return result is scala.Some<*>
     }
@@ -127,7 +127,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contained key, {@code false} otherwise
      */
-    fun add(key: K, expireAfter: Long, timeUnit: TimeUnit): Boolean {
+    override fun add(key: K, expireAfter: Long, timeUnit: TimeUnit): Boolean {
         val result = contains(key)
         database.add(key, FiniteDuration.create(expireAfter, timeUnit)).get()
         return result
@@ -140,7 +140,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contained key, {@code false} otherwise
      */
-    fun add(key: K, expireAt: LocalDateTime): Boolean {
+    override fun add(key: K, expireAt: LocalDateTime): Boolean {
         val result = contains(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         database.add(key, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
@@ -155,7 +155,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun expire(key: K, after: Long, timeUnit: TimeUnit): Boolean {
+    override fun expire(key: K, after: Long, timeUnit: TimeUnit): Boolean {
         val result = contains(key)
         database.expire(key, FiniteDuration.create(after, timeUnit)).get()
         return result
@@ -168,7 +168,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the old value for this key or null
      */
-    fun expire(key: K, expireAt: LocalDateTime): Boolean {
+    override fun expire(key: K, expireAt: LocalDateTime): Boolean {
         val result = contains(key)
         val expireAtNano = Duration.between(LocalDateTime.now(), expireAt).nano
         database.expire(key, FiniteDuration.create(expireAtNano.toLong(), TimeUnit.NANOSECONDS).fromNow()).get()
@@ -181,7 +181,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contains key, {@code false} otherwise
      */
-    fun containsAll(collection: Collection<K>): Boolean {
+    override fun containsAll(collection: Collection<K>): Boolean {
         return collection.stream()
                 .allMatch({ elem -> database.contains(elem).get() as Boolean })
     }
@@ -192,7 +192,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contained keys, {@code false} otherwise
      */
-    fun add(list: List<K>): Boolean {
+    override fun add(list: List<K>): Boolean {
         val entries = scala.collection.JavaConverters.asScalaBufferConverter(list).asScala()
         database.add(entries.toSet()).get()
         return true
@@ -204,7 +204,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set contained keys, {@code false} otherwise
      */
-    fun retainAll(collection: Collection<K>): Boolean {
+    override fun retainAll(collection: Collection<K>): Boolean {
         val entries = database.asScala().toSeq()
         val result = ArrayList<K>()
         var index = 0
@@ -214,7 +214,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
         }
         result.stream()
                 .filter({ elem -> !collection.contains(elem) })
-                .forEach(Consumer<K>({ database.remove(it) }))
+                .forEach({ database.remove(it) })
         return true
     }
 
@@ -222,7 +222,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      * Removes the keys of this set.
      * @param keys the keys
      */
-    fun remove(keys: MutableSet<K>) {
+    override fun remove(keys: MutableSet<K>) {
         database.remove(scala.collection.JavaConverters.asScalaSetConverter(keys).asScala()).get()
     }
 
@@ -231,7 +231,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      * @param from the from
      * @param to the to
      */
-    fun remove(from: K, to: K) {
+    override fun remove(from: K, to: K) {
         database.remove(from, to).get()
     }
 
@@ -240,7 +240,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the size of elements in this set
      */
-    fun size(): Int {
+    override fun size(): Int {
         return database.asScala().size()
     }
 
@@ -249,7 +249,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if a set is not empty, {@code false} otherwise
      */
-    fun nonEmpty(): Boolean {
+    override fun nonEmpty(): Boolean {
         return database.nonEmpty().get() as Boolean
     }
 
@@ -259,7 +259,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the expiration date for key in this set
      */
-    fun expiration(key: K): LocalDateTime? {
+    override fun expiration(key: K): LocalDateTime? {
         val result = database.expiration(key).get()
         if (result is scala.Some<*>) {
             val expiration = result.get() as Deadline
@@ -274,7 +274,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the time left for key in this set
      */
-    fun timeLeft(key: K): Duration? {
+    override fun timeLeft(key: K): Duration? {
         val result = database.timeLeft(key).get()
         if (result is scala.Some<*>) {
             val duration = result.get() as FiniteDuration
@@ -288,7 +288,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the size for segments for this set
      */
-    fun sizeOfSegments(): Long {
+    override fun sizeOfSegments(): Long {
         return database.sizeOfSegments()
     }
 
@@ -297,7 +297,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the level of meter for zerro level
      */
-    fun level0Meter(): Level0Meter {
+    override fun level0Meter(): Level0Meter {
         return database.level0Meter()
     }
 
@@ -316,7 +316,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the level of meter for first level
      */
-    fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
+    override fun levelMeter(levelNumber: Int): Optional<LevelMeter> {
         val levelMeter = database.levelMeter(levelNumber)
         return if (levelMeter.isEmpty()) Optional.empty<LevelMeter>() else Optional.ofNullable(levelMeter.get())
     }
@@ -324,7 +324,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
     /**
      * Clears this set.
      */
-    fun clear() {
+    override fun clear() {
         database.asScala().clear()
     }
 
@@ -334,7 +334,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return {@code true} if old key was present, {@code false} otherwise
      */
-    fun remove(key: K): Boolean {
+    override fun remove(key: K): Boolean {
         val result = database.remove(key).get()
         return result is scala.Some<*>
     }
@@ -344,7 +344,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the java set of this set
      */
-    fun asJava(): MutableSet<K> {
+    override fun asJava(): MutableSet<K> {
         return JavaConverters.setAsJavaSetConverter(database.asScala()).asJava()
     }
 
@@ -361,7 +361,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : Closeable {
      *
      * @return the level zerro for this set
      */
-    fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>): Level0Meter {
+    override fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>): Level0Meter {
         val preparesList = Arrays.asList(*prepares)
         val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
         return database.commit(prepareIterator).get() as Level0Meter
