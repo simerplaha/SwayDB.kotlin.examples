@@ -806,6 +806,7 @@ class QuickStartPersistentMapTest : TestBase() {
     fun memoryMapIntStringFromBuilder() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
+                .withDir(addTarget(Paths.get("disk1builder")))
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
                 .withMapSize(4000000)
