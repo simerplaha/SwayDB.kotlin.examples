@@ -22,12 +22,15 @@ import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
+import scala.collection.Seq
 import scala.collection.mutable.ListBuffer
 import scala.runtime.AbstractFunction1
 import swaydb.Prepare
 import swaydb.base.TestBase
 import swaydb.data.IO
-import swaydb.data.api.grouping.KeyValueGroupingStrategy
+import swaydb.data.config.Dir
+import swaydb.data.config.MMAP;
+import swaydb.data.config.RecoveryMode;
 import swaydb.data.slice.Slice
 import swaydb.kotlin.ApacheSerializer
 import swaydb.kotlin.Apply
@@ -43,9 +46,9 @@ class QuickStartPersistentMapTest : TestBase() {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun memoryMapIntStringFrom() {
-        // Create a memory database
-        // val db = memory.Map[Int, String]().get
+    fun persistentMapIntStringFrom() {
+        // Create a persistent database
+        // val db = persistent.Map[Int, String]().get
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1From"))).use({ db ->
             // db.put(1, "one").get
@@ -94,7 +97,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringFromOrAfter() {
+    fun persistentMapIntStringFromOrAfter() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1FromOrAfter"))).use({ db ->
             // write 100 key-values atomically
@@ -116,7 +119,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringFromOrBefore() {
+    fun persistentMapIntStringFromOrBefore() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1FromOrBefore"))).use({ db ->
             // write 100 key-values atomically
@@ -139,7 +142,7 @@ class QuickStartPersistentMapTest : TestBase() {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun memoryMapIntStringKeys() {
+    fun persistentMapIntStringKeys() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Keys"))).use({ db ->
             // write 100 key-values atomically
@@ -172,7 +175,7 @@ class QuickStartPersistentMapTest : TestBase() {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun memoryMapIntStringReverse() {
+    fun persistentMapIntStringReverse() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Reverse"))).use({ db ->
             // write 10 key-values atomically
@@ -204,7 +207,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringMap() {
+    fun persistentMapIntStringMap() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Map"))).use({ db ->
             // write 10 key-values atomically
@@ -225,7 +228,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringDrop() {
+    fun persistentMapIntStringDrop() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Drop"))).use({ db ->
             // write 10 key-values atomically
@@ -244,7 +247,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringDropWhile() {
+    fun persistentMapIntStringDropWhile() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1DropWhile"))).use({ db ->
             // write 100 key-values atomically
@@ -267,7 +270,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringTake() {
+    fun persistentMapIntStringTake() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Take"))).use({ db ->
             // write 10 key-values atomically
@@ -286,7 +289,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringFilter() {
+    fun persistentMapIntStringFilter() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Filter"))).use({ db ->
             // write 10 key-values atomically
@@ -305,7 +308,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringForeach() {
+    fun persistentMapIntStringForeach() {
         swaydb.kotlin.persistent.Map.create<Int, String>(
                 Int::class, String::class, addTarget(Paths.get("disk1Foreach"))).use({ db ->
             // write 10 key-values atomically
@@ -323,8 +326,8 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringClear() {
-        // Create a memory database
+    fun persistentMapIntStringClear() {
+        // Create a persistent database
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderClear")))
@@ -345,7 +348,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringSize() {
+    fun persistentMapIntStringSize() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderSize")))
@@ -361,7 +364,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringIsEmpty() {
+    fun persistentMapIntStringIsEmpty() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderIsEmpty")))
@@ -374,7 +377,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringContainsValue() {
+    fun persistentMapIntStringContainsValue() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderContainsValue")))
@@ -387,7 +390,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringMightContain() {
+    fun persistentMapIntStringMightContain() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderMightContain")))
@@ -400,7 +403,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringHead() {
+    fun persistentMapIntStringHead() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderHead")))
@@ -416,7 +419,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringKeysHead() {
+    fun persistentMapIntStringKeysHead() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderKeysHead")))
@@ -432,7 +435,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringKeysLast() {
+    fun persistentMapIntStringKeysLast() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderKeysLast")))
@@ -449,7 +452,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringLast() {
+    fun persistentMapIntStringLast() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderLast")))
@@ -466,7 +469,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringPutMap() {
+    fun persistentMapIntStringPutMap() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderPutMap")))
@@ -481,7 +484,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringUpdateMap() {
+    fun persistentMapIntStringUpdateMap() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderUpdateMap")))
@@ -497,7 +500,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringKeySet() {
+    fun persistentMapIntStringKeySet() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderKeySet")))
@@ -510,7 +513,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringValues() {
+    fun persistentMapIntStringValues() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderValues")))
@@ -523,7 +526,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringEntrySet() {
+    fun persistentMapIntStringEntrySet() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderEntrySet")))
@@ -536,7 +539,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringPutExpireAfter() {
+    fun persistentMapIntStringPutExpireAfter() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderPutExpireAfter")))
@@ -553,7 +556,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringPutExpireAt() {
+    fun persistentMapIntStringPutExpireAt() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderPutExpireAt")))
@@ -570,7 +573,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringExpiration() {
+    fun persistentMapIntStringExpiration() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderExpiration")))
@@ -586,7 +589,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringTimeLeft() {
+    fun persistentMapIntStringTimeLeft() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderTimeLeft")))
@@ -601,7 +604,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringKeySize() {
+    fun persistentMapIntStringKeySize() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderKeySize")))
@@ -614,7 +617,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringValueSize() {
+    fun persistentMapIntStringValueSize() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderValueSize")))
@@ -627,7 +630,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringSizes() {
+    fun persistentMapIntStringSizes() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderSizes")))
@@ -644,7 +647,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringExpireAfter() {
+    fun persistentMapIntStringExpireAfter() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderExpireAfter")))
@@ -662,7 +665,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringExpireAt() {
+    fun persistentMapIntStringExpireAt() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderExpireAt")))
@@ -680,7 +683,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringUpdate() {
+    fun persistentMapIntStringUpdate() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderUpdate")))
@@ -694,7 +697,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringAsJava() {
+    fun persistentMapIntStringAsJava() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderAsJava")))
@@ -707,7 +710,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntStringRemove() {
+    fun persistentMapIntStringRemove() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builderRemove")))
@@ -726,7 +729,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapStringIntRegisterApplyFunctionUpdate() {
+    fun persistentMapStringIntRegisterApplyFunctionUpdate() {
         swaydb.kotlin.persistent.Map
                 .builder<String, Int>()
                 .withDir(addTarget(Paths.get("disk1builderFunctionUpdate")))
@@ -744,7 +747,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapStringIntRegisterApplyFunctionExpire() {
+    fun persistentMapStringIntRegisterApplyFunctionExpire() {
         swaydb.kotlin.persistent.Map
                 .builder<String, Int>()
                 .withDir(addTarget(Paths.get("disk1builderFunctionExpire")))
@@ -768,7 +771,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapStringIntRegisterApplyFunctionRemove() {
+    fun persistentMapStringIntRegisterApplyFunctionRemove() {
         swaydb.kotlin.persistent.Map
                 .builder<String, Int>()
                 .withDir(addTarget(Paths.get("disk1builderFunctionRemove")))
@@ -785,7 +788,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapStringIntRegisterApplyFunctionNothing() {
+    fun persistentMapStringIntRegisterApplyFunctionNothing() {
         swaydb.kotlin.persistent.Map
                 .builder<String, Int>()
                 .withDir(addTarget(Paths.get("disk1builderFunctionNothing")))
@@ -802,22 +805,32 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
 
+    @Suppress("UNCHECKED_CAST")
     @Test
-    fun memoryMapIntStringFromBuilder() {
+    fun persistentMapIntStringFromBuilder() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, String>()
                 .withDir(addTarget(Paths.get("disk1builder")))
                 .withKeySerializer(Int::class)
                 .withValueSerializer(String::class)
-                .withMapSize(4000000)
-                .withSegmentSize(2000000)
+                .withMaxOpenSegments(1000)
                 .withCacheSize(100000000)
+                .withMapSize(4000000)
+                .withMmapMaps(true)
+                .withRecoveryMode(RecoveryMode.`ReportFailure$`.`MODULE$`)
+                .withMmapAppendix(true)
+                .withMmapSegments(MMAP.`WriteAndRead$`.`MODULE$`)
+                .withSegmentSize(2000000)
+                .withAppendixFlushCheckpointSize(2000000)
+                .withOtherDirs(scala.collection.immutable.`Nil$`.`MODULE$` as Seq<Dir>)
                 .withCacheCheckDelay(scala.concurrent.duration.FiniteDuration.apply(5, TimeUnit.SECONDS))
+                .withSegmentsOpenCheckDelay(
+                        scala.concurrent.duration.FiniteDuration.apply(5, TimeUnit.SECONDS))
                 .withBloomFilterFalsePositiveRate(0.01)
                 .withCompressDuplicateValues(true)
                 .withDeleteSegmentsEventually(false)
-                .withLastLevelGroupingStrategy(scala.Option.empty<KeyValueGroupingStrategy>())
-                .withAcceleration(swaydb.memory.`Map$`.`MODULE$`.`apply$default$9`<Any, Any>())
+                .withLastLevelGroupingStrategy(scala.Option.empty())
+                .withAcceleration(swaydb.persistent.`Map$`.`MODULE$`.`apply$default$18`<Any, Any>())
                 .build().use { db ->
                     // db.put(1, "one").get
                     db.put(1, "one")
@@ -875,7 +888,7 @@ class QuickStartPersistentMapTest : TestBase() {
     }
 
     @Test
-    fun memoryMapIntCustom() {
+    fun persistentMapIntCustom() {
         swaydb.kotlin.persistent.Map
                 .builder<Int, MyData1>()
                 .withDir(addTarget(Paths.get("disk1builderCustom")))
@@ -907,7 +920,7 @@ class QuickStartPersistentMapTest : TestBase() {
     internal class MyData(var key: String, var value: String) : java.io.Serializable
 
     @Test
-    fun memoryMapIntApacheSerializer() {
+    fun persistentMapIntApacheSerializer() {
 
         swaydb.kotlin.persistent.Map
                 .builder<Int, MyData>()
