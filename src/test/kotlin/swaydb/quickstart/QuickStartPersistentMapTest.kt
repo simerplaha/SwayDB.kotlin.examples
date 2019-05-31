@@ -21,6 +21,7 @@ package swaydb.quickstart
 import org.awaitility.Awaitility.await
 import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
+import org.junit.BeforeClass
 import org.junit.Test
 import scala.collection.Seq
 import scala.collection.mutable.ListBuffer
@@ -34,6 +35,7 @@ import swaydb.data.config.RecoveryMode;
 import swaydb.data.slice.Slice
 import swaydb.kotlin.ApacheSerializer
 import swaydb.kotlin.Apply
+import java.io.IOException
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -43,6 +45,15 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.IntStream
 
 class QuickStartPersistentMapTest : TestBase() {
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        @Throws(IOException::class)
+        fun beforeClass() {
+            TestBase().deleteDirectoryWalkTreeStartsWith("target/disk1")
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     @Test
