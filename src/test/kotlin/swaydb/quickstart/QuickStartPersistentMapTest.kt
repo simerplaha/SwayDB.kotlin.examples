@@ -30,8 +30,8 @@ import swaydb.Prepare
 import swaydb.base.TestBase
 import swaydb.data.IO
 import swaydb.data.config.Dir
-import swaydb.data.config.MMAP;
-import swaydb.data.config.RecoveryMode;
+import swaydb.data.config.MMAP
+import swaydb.data.config.RecoveryMode
 import swaydb.data.slice.Slice
 import swaydb.kotlin.ApacheSerializer
 import swaydb.kotlin.Apply
