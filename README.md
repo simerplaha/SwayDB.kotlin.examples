@@ -35,12 +35,10 @@ compile 'com.github.javadev:swaydb-kotlin:0.8-beta.8.2'
 ### Usage
 
 ```kotlin
-import java.util.AbstractMap.SimpleEntry
-
-import static org.hamcrest.CoreMatchers.equalTo
-import static org.junit.Assert.assertThat
-
+import org.hamcrest.CoreMatchers.equalTo
+import org.junit.Assert.assertThat
 import org.junit.Test
+import java.util.AbstractMap.SimpleEntry
 
 class QuickStartTest {
 
@@ -49,28 +47,28 @@ class QuickStartTest {
         // Create a memory database
         // val db = memory.Map[Int, String]().get
         swaydb.kotlin.memory.Map.create<Int, String>(
-                Int::class, String::class).use({ db ->
-
-            // write 100 key-values atomically
-            db.put((1..100)
-                    .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
-                    .map { it.key to it.value }
-                    .toMap().toMutableMap())
-
-            // Iteration: fetch all key-values withing range 10 to 90, update values
-            // and atomically write updated key-values
-            db
-                    .from(10)
-                    .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
-                    .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
-                    .materialize()
-                    .foreach({entry -> db.put(entry)})
-
-            // assert the key-values were updated
-            (10..90)
-                    .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
-                    .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
-        })
+                Int::class, String::class).use { db ->
+        
+                    // write 100 key-values atomically
+                    db.put((1..100)
+                            .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
+                            .map { it.key to it.value }
+                            .toMap().toMutableMap())
+        
+                    // Iteration: fetch all key-values withing range 10 to 90, update values
+                    // and atomically write updated key-values
+                    db
+                            .from(10)
+                            .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
+                            .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                            .materialize()
+                            .foreach({entry -> db.put(entry)})
+        
+                    // assert the key-values were updated
+                    (10..90)
+                            .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
+                            .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
+                }
     }
 }
 ```
