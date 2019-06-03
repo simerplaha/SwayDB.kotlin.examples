@@ -791,7 +791,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
             return this
         }
 
-        fun withGroupingStrategy(lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K, V> {
+        fun withGroupingStrategy(groupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K, V> {
             this.groupingStrategy = groupingStrategy
             return this
         }

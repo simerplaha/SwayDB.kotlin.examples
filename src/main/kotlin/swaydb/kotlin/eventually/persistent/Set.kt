@@ -459,7 +459,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
             return this
         }
 
-        fun withGroupingStrategy(lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K> {
+        fun withGroupingStrategy(groupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K> {
             this.groupingStrategy = groupingStrategy
             return this
         }
