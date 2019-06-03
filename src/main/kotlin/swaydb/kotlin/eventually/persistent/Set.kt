@@ -13,6 +13,7 @@ import swaydb.data.accelerate.Level0Meter
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.compaction.LevelMeter
 import swaydb.data.config.Dir
+import swaydb.data.config.MMAP
 import swaydb.kotlin.Serializer
 import java.io.Closeable
 import java.nio.file.Path
@@ -352,23 +353,25 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
     class Builder<K> {
 
         private var dir: Path? = null
-        private var maxOpenSegments = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
-        private var cacheSize = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
-        private var mapSize = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
-        private var mmapMaps = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
-        private var recoveryMode: swaydb.data.config.RecoveryMode = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
-        private var mmapAppendix = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
-        private var mmapSegments: swaydb.data.config.MMAP = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
-        private var segmentSize = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>()
-        private var appendixFlushCheckpointSize = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$10`<K, scala.runtime.`Nothing$`>()
-        private var otherDirs: Seq<Dir> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$11`<K, scala.runtime.`Nothing$`>()
-        private var cacheCheckDelay = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>()
-        private var segmentsOpenCheckDelay = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>()
-        private var bloomFilterFalsePositiveRate = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$14`<K, scala.runtime.`Nothing$`>()
-        private var compressDuplicateValues = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$15`<K, scala.runtime.`Nothing$`>()
-        private var deleteSegmentsEventually = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$16`<K, scala.runtime.`Nothing$`>()
-        private var lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, scala.runtime.`Nothing$`>()
-        private var acceleration: Function1<Level0Meter, Accelerator> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
+        private var maxOpenSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
+        private var mapSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
+        private var maxMemoryLevelSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
+        private var maxSegmentsToPush = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
+        private var memoryLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
+        private var persistentLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
+        private var persistentLevelAppendixFlushCheckpointSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
+        private var mmapPersistentSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>()
+        private var mmapPersistentAppendix = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$10`<K, scala.runtime.`Nothing$`>()
+        private var cacheSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$11`<K, scala.runtime.`Nothing$`>()
+        private var otherDirs: Seq<Dir> = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>()
+        private var cacheCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>()
+        private var segmentsOpenCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$14`<K, scala.runtime.`Nothing$`>()
+        private var bloomFilterFalsePositiveRate = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$15`<K, scala.runtime.`Nothing$`>()
+        private var compressDuplicateValues = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$16`<K, scala.runtime.`Nothing$`>()
+        private var deleteSegmentsEventually = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, scala.runtime.`Nothing$`>()
+        private var groupingStrategy: Option<KeyValueGroupingStrategy> =
+                swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
+        private var acceleration: Function1<Level0Meter, Accelerator> = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$19`<K, scala.runtime.`Nothing$`>()
         private var keySerializer: Any? = null
 
         fun withDir(dir: Path): Builder<K> {
@@ -381,43 +384,48 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
             return this
         }
 
-        fun withCacheSize(cacheSize: Int): Builder<K> {
-            this.cacheSize = cacheSize
-            return this
-        }
-
         fun withMapSize(mapSize: Int): Builder<K> {
             this.mapSize = mapSize
             return this
         }
 
-        fun withMmapMaps(mmapMaps: Boolean): Builder<K> {
-            this.mmapMaps = mmapMaps
+        fun withMaxMemoryLevelSize(maxMemoryLevelSize: Int): Builder<K> {
+            this.maxMemoryLevelSize = maxMemoryLevelSize
             return this
         }
 
-        fun withRecoveryMode(recoveryMode: swaydb.data.config.RecoveryMode): Builder<K> {
-            this.recoveryMode = recoveryMode
+        fun withMaxSegmentsToPush(maxSegmentsToPush: Int): Builder<K> {
+            this.maxSegmentsToPush = maxSegmentsToPush
             return this
         }
 
-        fun withMmapAppendix(mmapAppendix: Boolean): Builder<K> {
-            this.mmapAppendix = mmapAppendix
+        fun withMemoryLevelSegmentSize(memoryLevelSegmentSize: Int): Builder<K> {
+            this.memoryLevelSegmentSize = memoryLevelSegmentSize
             return this
         }
 
-        fun withMmapSegments(mmapSegments: swaydb.data.config.MMAP): Builder<K> {
-            this.mmapSegments = mmapSegments
+        fun withPersistentLevelSegmentSize(persistentLevelSegmentSize: Int): Builder<K> {
+            this.persistentLevelSegmentSize = persistentLevelSegmentSize
             return this
         }
 
-        fun withSegmentSize(segmentSize: Int): Builder<K> {
-            this.segmentSize = segmentSize
+        fun withPersistentLevelAppendixFlushCheckpointSize(persistentLevelAppendixFlushCheckpointSize: Int): Builder<K> {
+            this.persistentLevelAppendixFlushCheckpointSize = persistentLevelAppendixFlushCheckpointSize
             return this
         }
 
-        fun withAppendixFlushCheckpointSize(appendixFlushCheckpointSize: Int): Builder<K> {
-            this.appendixFlushCheckpointSize = appendixFlushCheckpointSize
+        fun withMmapPersistentSegments(mmapPersistentSegments: MMAP): Builder<K> {
+            this.mmapPersistentSegments = mmapPersistentSegments
+            return this
+        }
+
+        fun withMmapPersistentAppendix(mmapPersistentAppendix: Boolean): Builder<K> {
+            this.mmapPersistentAppendix = mmapPersistentAppendix
+            return this
+        }
+
+        fun withCacheSize(cacheSize: Int): Builder<K> {
+            this.cacheSize = cacheSize
             return this
         }
 
@@ -451,8 +459,8 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
             return this
         }
 
-        fun withLastLevelGroupingStrategy(lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K> {
-            this.lastLevelGroupingStrategy = lastLevelGroupingStrategy
+        fun withGroupingStrategy(lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy>): Builder<K> {
+            this.groupingStrategy = groupingStrategy
             return this
         }
 
@@ -468,73 +476,18 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
 
         @Suppress("UNCHECKED_CAST")
         fun build(): Set<K> {
-            val keyOrder = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$21`<K, scala.runtime.`Nothing$`>(dir,
-                    maxOpenSegments, cacheSize, mapSize, mmapMaps, recoveryMode,
-                    mmapAppendix, mmapSegments, segmentSize, appendixFlushCheckpointSize, otherDirs,
-                    cacheCheckDelay, segmentsOpenCheckDelay,
-                    bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
-                    lastLevelGroupingStrategy, acceleration)
-            val ec = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$22`<K, scala.runtime.`Nothing$`>(dir,
-                    maxOpenSegments, cacheSize, mapSize, mmapMaps,
-                    recoveryMode, mmapAppendix, mmapSegments, segmentSize, appendixFlushCheckpointSize,
-                    otherDirs, cacheCheckDelay, segmentsOpenCheckDelay,
-                    bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
-                    lastLevelGroupingStrategy, acceleration)
-            return Set(
-                    swaydb.persistent.`Set$`.`MODULE$`.apply(dir,
-                            maxOpenSegments, cacheSize, mapSize, mmapMaps, recoveryMode,
-                            mmapAppendix, mmapSegments, segmentSize, appendixFlushCheckpointSize, otherDirs,
-                            cacheCheckDelay, segmentsOpenCheckDelay,
-                            bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
-                            lastLevelGroupingStrategy, acceleration, Serializer.classToType(keySerializer),
-                            keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
-        }
-    }
-
-    companion object {
-
-        /**
-         * Creates the set.
-         * @param <K> the type of the key element
-         * @param keySerializer the keySerializer
-         * @param dir the dir
-         *
-         * @return the set
-         */
-        @Suppress("UNCHECKED_CAST")
-        fun <K> create(keySerializer: Any, dir: Path): Set<K> {
-            val maxOpenSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
-            val mapSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
-            val maxMemoryLevelSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
-            val maxSegmentsToPush = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
-            val memoryLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
-            val persistentLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
-            val persistentLevelAppendixFlushCheckpointSize =
-                    swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
-            val mmapPersistentSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>();
-            val mmapPersistentAppendix = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$10`<K, scala.runtime.`Nothing$`>();
-            val cacheSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$11`<K, scala.runtime.`Nothing$`>()
-            val otherDirs = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>()
-            val cacheCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>()
-            val segmentsOpenCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$14`<K, scala.runtime.`Nothing$`>()
-            val bloomFilterFalsePositiveRate = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$15`<K, scala.runtime.`Nothing$`>()
-            val compressDuplicateValues = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$16`<K, scala.runtime.`Nothing$`>()
-            val deleteSegmentsEventually = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, scala.runtime.`Nothing$`>()
-            val groupingStrategy =
-                    swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
-            val acceleration = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$19`<K, scala.runtime.`Nothing$`>()
             val keyOrder = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$22`<K, scala.runtime.`Nothing$`>(
                     dir, maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush, memoryLevelSegmentSize,
                     persistentLevelSegmentSize, persistentLevelAppendixFlushCheckpointSize, mmapPersistentSegments,
                     mmapPersistentAppendix, cacheSize, otherDirs, cacheCheckDelay, segmentsOpenCheckDelay,
                     bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
-                    groupingStrategy, acceleration)
+                    groupingStrategy, acceleration);
             val ec = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$23`<K, scala.runtime.`Nothing$`>(
                     dir, maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush, memoryLevelSegmentSize,
                     persistentLevelSegmentSize, persistentLevelAppendixFlushCheckpointSize,
                     mmapPersistentSegments, mmapPersistentAppendix, cacheSize, otherDirs,
                     cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
-                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration)
+                    compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration);
             return Set(
                     swaydb.eventually.persistent.`Set$`.`MODULE$`.apply(dir,
                             maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush,
@@ -542,12 +495,68 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
                             mmapPersistentSegments, mmapPersistentAppendix, cacheSize, otherDirs,
                             cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
                             compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration,
-                            Serializer.classToType(keySerializer), keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
+                            Serializer.classToType(keySerializer), keyOrder, ec).get() as swaydb.Set<K, IO<*>>);
+        }
+    }
+
+    companion object {
+
+        /**
+         * Creates the map.
+         * @param <K> the type of the key element
+         * @param <V> the type of the value element
+         * @param keySerializer the keySerializer
+         * @param dir the directory
+         *
+         * @return the map
+         */
+        @Suppress("UNCHECKED_CAST")
+        fun <K> create(keySerializer: Any, dir: Path): Set<K> {
+        val maxOpenSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$2`<K, scala.runtime.`Nothing$`>()
+        val mapSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$3`<K, scala.runtime.`Nothing$`>()
+        val maxMemoryLevelSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$4`<K, scala.runtime.`Nothing$`>()
+        val maxSegmentsToPush = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$5`<K, scala.runtime.`Nothing$`>()
+        val memoryLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$6`<K, scala.runtime.`Nothing$`>()
+        val persistentLevelSegmentSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$7`<K, scala.runtime.`Nothing$`>()
+        val persistentLevelAppendixFlushCheckpointSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$8`<K, scala.runtime.`Nothing$`>()
+        val mmapPersistentSegments = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$9`<K, scala.runtime.`Nothing$`>()
+        val mmapPersistentAppendix = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$10`<K, scala.runtime.`Nothing$`>()
+        val cacheSize = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$11`<K, scala.runtime.`Nothing$`>()
+        val otherDirs = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$12`<K, scala.runtime.`Nothing$`>()
+        val cacheCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$13`<K, scala.runtime.`Nothing$`>()
+        val segmentsOpenCheckDelay = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$14`<K, scala.runtime.`Nothing$`>()
+        val bloomFilterFalsePositiveRate = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$15`<K, scala.runtime.`Nothing$`>()
+        val compressDuplicateValues = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$16`<K, scala.runtime.`Nothing$`>()
+        val deleteSegmentsEventually = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, scala.runtime.`Nothing$`>()
+        val groupingStrategy =
+                swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
+        val acceleration = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$19`<K, scala.runtime.`Nothing$`>()
+        val keyOrder = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$22`<K, scala.runtime.`Nothing$`>(
+                dir, maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush, memoryLevelSegmentSize,
+                persistentLevelSegmentSize, persistentLevelAppendixFlushCheckpointSize, mmapPersistentSegments,
+                mmapPersistentAppendix, cacheSize, otherDirs, cacheCheckDelay, segmentsOpenCheckDelay,
+                bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
+                groupingStrategy, acceleration);
+        val ec = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$23`<K, scala.runtime.`Nothing$`>(
+                dir, maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush, memoryLevelSegmentSize,
+                persistentLevelSegmentSize, persistentLevelAppendixFlushCheckpointSize,
+                mmapPersistentSegments, mmapPersistentAppendix, cacheSize, otherDirs,
+                cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
+                compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration);
+        return Set(
+                swaydb.eventually.persistent.`Set$`.`MODULE$`.apply(dir,
+                maxOpenSegments, mapSize, maxMemoryLevelSize, maxSegmentsToPush,
+                memoryLevelSegmentSize, persistentLevelSegmentSize, persistentLevelAppendixFlushCheckpointSize,
+                mmapPersistentSegments, mmapPersistentAppendix, cacheSize, otherDirs,
+                cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
+                compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration,
+                Serializer.classToType(keySerializer), keyOrder, ec).get() as swaydb.Set<K, IO<*>>);
         }
 
         /**
          * Creates the builder.
          * @param <K> the type of the key element
+         * @param <V> the type of the value element
          *
          * @return the builder
          */
