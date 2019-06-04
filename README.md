@@ -59,8 +59,8 @@ class QuickStartTest {
                     // and atomically write updated key-values
                     db
                             .from(10)
-                            .takeWhile({ item: MutableMap.MutableEntry<Int, String> -> item.key <= 90 })
-                            .map({ item -> SimpleEntry(item.key, item.value + "_updated") })
+                            .takeWhile({ item -> item.key <= 90 })
+                            .map({ item -> item.setValue(item.value + "_updated"); item })
                             .materialize()
                             .foreach({entry -> db.put(entry)})
         
