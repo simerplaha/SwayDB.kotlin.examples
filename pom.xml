@@ -4,7 +4,7 @@
     <groupId>io.swaydb</groupId>
     <artifactId>swaydb-kotlin</artifactId>
     <packaging>jar</packaging>
-    <version>0.8-beta.8.2</version>
+    <version>0.8-beta.8.3</version>
     <name>swaydb-kotlin</name>
     <description>Kotlin wrapper for SwayDB</description>
     <url>https://github.com/simerplaha/SwayDB.kotlin</url>
