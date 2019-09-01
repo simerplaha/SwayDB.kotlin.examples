@@ -23,7 +23,7 @@ import java.time.LocalDateTime
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 import swaydb.Prepare
-import swaydb.data.accelerate.Level0Meter
+import swaydb.data.accelerate.LevelZeroMeter
 import swaydb.data.compaction.LevelMeter
 
 /**
@@ -195,7 +195,7 @@ interface Set<K> {
      *
      * @return the level of meter for zerro level
      */
-    fun level0Meter(): Level0Meter
+    fun level0Meter(): LevelZeroMeter
 
     /**
      * Returns the level of meter for level.
@@ -231,5 +231,5 @@ interface Set<K> {
      *
      * @return the level zerro for this set
      */
-    fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>): Level0Meter
+    fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>): swaydb.data.IO.OK
 }

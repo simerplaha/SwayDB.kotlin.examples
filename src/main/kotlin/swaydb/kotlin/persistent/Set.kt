@@ -9,7 +9,7 @@ import scala.concurrent.duration.FiniteDuration
 import swaydb.Prepare
 import swaydb.data.IO
 import swaydb.data.accelerate.Accelerator
-import swaydb.data.accelerate.Level0Meter
+import swaydb.data.accelerate.LevelZeroMeter
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.compaction.LevelMeter
 import swaydb.data.config.Dir
@@ -278,7 +278,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
      *
      * @return the level of meter for zerro level
      */
-    override fun level0Meter(): Level0Meter {
+    override fun level0Meter(): LevelZeroMeter {
         return database.level0Meter()
     }
 
@@ -333,7 +333,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
      * Closes the database.
      */
     override fun close() {
-        database.closeDatabase().get()
+        database.close().get()
     }
 
     /**
@@ -342,11 +342,11 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
      *
      * @return the level zerro for this set
      */
-    override fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>):Level0Meter
+    override fun commit(vararg prepares: Prepare<K, scala.runtime.`Nothing$`>):swaydb.data.IO.OK
     {
         val preparesList = Arrays.asList<Prepare<K, scala.runtime.`Nothing$`>>(*prepares)
         val prepareIterator = JavaConverters.iterableAsScalaIterableConverter<Prepare<K, scala.runtime.`Nothing$`>>(preparesList).asScala()
-        return database.commit(prepareIterator).get() as Level0Meter
+        return database.commit(prepareIterator).get() as swaydb.data.IO.OK
     }
 
     class Builder<K> {
@@ -368,7 +368,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
         private var compressDuplicateValues = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$15`<K, scala.runtime.`Nothing$`>()
         private var deleteSegmentsEventually = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$16`<K, scala.runtime.`Nothing$`>()
         private var lastLevelGroupingStrategy: Option<KeyValueGroupingStrategy> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, scala.runtime.`Nothing$`>()
-        private var acceleration: Function1<Level0Meter, Accelerator> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
+        private var acceleration: Function1<LevelZeroMeter, Accelerator> = swaydb.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, scala.runtime.`Nothing$`>()
         private var keySerializer: Any? = null
 
         fun withDir(dir: Path): Builder<K> {
@@ -456,7 +456,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
             return this
         }
 
-        fun withAcceleration(acceleration: Function1<Level0Meter, Accelerator>): Builder<K> {
+        fun withAcceleration(acceleration: Function1<LevelZeroMeter, Accelerator>): Builder<K> {
             this.acceleration = acceleration
             return this
         }
@@ -487,7 +487,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
                             cacheCheckDelay, segmentsOpenCheckDelay,
                             bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
                             lastLevelGroupingStrategy, acceleration, Serializer.classToType(keySerializer),
-                            keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
+                            keyOrder, ec, ec).get() as swaydb.Set<K, IO<*>>)
         }
     }
 
@@ -539,7 +539,7 @@ class Set<K>(private val database: swaydb.Set<K, IO<*>>) : swaydb.kotlin.Set<K>,
                             cacheCheckDelay, segmentsOpenCheckDelay,
                             bloomFilterFalsePositiveRate, compressDuplicateValues, deleteSegmentsEventually,
                             lastLevelGroupingStrategy, acceleration, Serializer.classToType(keySerializer),
-                            keyOrder, ec).get() as swaydb.Set<K, IO<*>>)
+                            keyOrder, ec, ec).get() as swaydb.Set<K, IO<*>>)
         }
 
         /**

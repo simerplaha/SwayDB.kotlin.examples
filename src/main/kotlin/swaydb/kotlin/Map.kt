@@ -20,7 +20,7 @@ package swaydb.kotlin
 
 import swaydb.Apply
 import swaydb.data.IO
-import swaydb.data.accelerate.Level0Meter
+import swaydb.data.accelerate.LevelZeroMeter
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.Optional
@@ -92,7 +92,7 @@ interface Map<K, V> {
      *
      * @return the level of meter for zerro level
      */
-    fun level0Meter(): Level0Meter
+    fun level0Meter(): LevelZeroMeter
 
     /**
      * Returns the level of meter for level.
@@ -436,6 +436,6 @@ interface Map<K, V> {
      *
      * @return the level zerro for this map
      */
-    fun commit(vararg prepares: swaydb.Prepare<K, V>): Level0Meter
+    fun commit(vararg prepares: swaydb.Prepare<K, V>): swaydb.data.IO.OK
 
 }

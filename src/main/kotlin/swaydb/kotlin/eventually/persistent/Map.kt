@@ -30,7 +30,7 @@ import swaydb.Apply
 import swaydb.Prepare
 import swaydb.data.IO
 import swaydb.data.accelerate.Accelerator
-import swaydb.data.accelerate.Level0Meter
+import swaydb.data.accelerate.LevelZeroMeter
 import swaydb.data.api.grouping.KeyValueGroupingStrategy
 import swaydb.data.compaction.LevelMeter
 import swaydb.data.config.Dir
@@ -142,7 +142,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
      *
      * @return the level of meter for zerro level
      */
-    override fun level0Meter(): Level0Meter {
+    override fun level0Meter(): LevelZeroMeter {
         return database.level0Meter()
     }
 
@@ -684,7 +684,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
      * Closes the database.
      */
     override fun close() {
-        database.closeDatabase().get()
+        database.close().get()
     }
 
     /**
@@ -693,10 +693,10 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
      *
      * @return the level zerro for this map
      */
-    override fun commit(vararg prepares: Prepare<K, V>): Level0Meter {
+    override fun commit(vararg prepares: Prepare<K, V>): swaydb.data.IO.OK {
         val preparesList = Arrays.asList(*prepares)
         val prepareIterator = JavaConverters.iterableAsScalaIterableConverter(preparesList).asScala()
-        return database.commit(prepareIterator).get() as Level0Meter
+        return database.commit(prepareIterator).get() as swaydb.data.IO.OK
     }
 
     class Builder<K, V> {
@@ -720,7 +720,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
         private var deleteSegmentsEventually = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$17`<K, V>()
         private var groupingStrategy: Option<KeyValueGroupingStrategy> =
                 swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$18`<K, V>()
-        private var acceleration: Function1<Level0Meter, Accelerator> = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$19`<K, V>()
+        private var acceleration: Function1<LevelZeroMeter, Accelerator> = swaydb.eventually.persistent.`Map$`.`MODULE$`.`apply$default$19`<K, V>()
         private var keySerializer: Any? = null
         private var valueSerializer: Any? = null
 
@@ -814,7 +814,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
             return this
         }
 
-        fun withAcceleration(acceleration: Function1<Level0Meter, Accelerator>): Builder<K, V> {
+        fun withAcceleration(acceleration: Function1<LevelZeroMeter, Accelerator>): Builder<K, V> {
             this.acceleration = acceleration
             return this
         }
@@ -851,7 +851,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
                             cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
                             compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration,
                             Serializer.classToType(keySerializer), Serializer.classToType(valueSerializer),
-                            keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>)
+                            keyOrder, ec, ec).get() as swaydb.Map<K, V, IO<*>>)
         }
     }
 
@@ -909,7 +909,7 @@ class Map<K, V>(private val database: swaydb.Map<K, V, IO<*>>) : swaydb.kotlin.M
                     cacheCheckDelay, segmentsOpenCheckDelay, bloomFilterFalsePositiveRate,
                     compressDuplicateValues, deleteSegmentsEventually, groupingStrategy, acceleration,
                     Serializer.classToType(keySerializer), Serializer.classToType(valueSerializer),
-                    keyOrder, ec).get() as swaydb.Map<K, V, IO<*>>);
+                    keyOrder, ec, ec).get() as swaydb.Map<K, V, IO<*>>);
         }
 
         /**
