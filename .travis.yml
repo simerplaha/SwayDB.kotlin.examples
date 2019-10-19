@@ -5,15 +5,9 @@ jdk:
   - oraclejdk8
 
 script:
-  - mvn -B clean test jacoco:report
+  - mvn -B clean compile
 
 addons:
    hosts:
        - travis
    hostname: travis
-
-before_script:
-  - pip install --user codecov
-
-after_success:
-  - codecov
