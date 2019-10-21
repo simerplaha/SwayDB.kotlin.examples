@@ -1,74 +1,87 @@
-# SwayDB.kotlin
+# SwayDB.kotlin.examples [![Slack Chat][slack-badge]][slack-link] [![Gitter Chat][gitter-badge]][gitter-link] [![Build status][build-badge]][build-link] [![Maven central][maven-badge]][maven-link]
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.javadev/swaydb-kotlin.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.javadev%22%20AND%20a%3A%22swaydb-kotlin%22)
-[![Build Status](https://travis-ci.com/simerplaha/SwayDB.kotlin.svg?branch=master)](https://travis-ci.com/simerplaha/SwayDB.kotlin)
-[![codecov.io](http://codecov.io/github/simerplaha/SwayDB.kotlin/coverage.svg?branch=master)](http://codecov.io/github/simerplaha/SwayDB.kotlin?branch=master)
+[gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
+[gitter-link]: https://gitter.im/SwayDB-chat/Lobby
 
-Kotlin wrapper for [SwayDB](https://github.com/simerplaha/SwayDB).
+[slack-badge]: https://img.shields.io/badge/slack-join%20chat-e01563.svg
+[slack-link]: https://join.slack.com/t/swaydb/shared_invite/enQtNzI1NzM1NTA0NzQxLTJiNjRhMDg2NGQ3YzBkNGMxZGRmODlkN2M3MWEwM2U2NWY1ZmU5OWEyYTgyN2ZhYjlhNjdlZTM3YWJjMGZmNzQ
+
+[maven-badge]: https://img.shields.io/maven-central/v/io.swaydb/java_2.12.svg
+[maven-link]: https://search.maven.org/search?q=g:io.swaydb%20AND%20a:java_2.12
+
+[build-badge]: https://travis-ci.com/simerplaha/SwayDB.kotlin.examples.svg?branch=master
+[build-link]: https://travis-ci.com/simerplaha/SwayDB.kotlin.examples
+
+Implements examples demoing [SwayDB](https://github.com/simerplaha/SwayDB)'s Java API.
 
 Requirements
 ============
 
 Kotlin 1.3 and later.
 
-## Installation
+### Quick start example.
 
-Include the following in your `pom.xml` for Maven:
+See [QuickStart.kt](/src/main/kotlin/quickstart/QuickStart.kt).
 
-```
-<dependencies>
-  <dependency>
-    <groupId>com.github.javadev</groupId>
-    <artifactId>swaydb-kotlin</artifactId>
-    <version>0.8-beta.8.3</version>
-  </dependency>
-  ...
-</dependencies>
-```
-
-Gradle:
-
-```groovy
-compile 'com.github.javadev:swaydb-kotlin:0.8-beta.8.3'
-```
-
-### Usage
 
 ```kotlin
-import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert.assertThat
-import org.junit.Test
-import java.util.AbstractMap.SimpleEntry
+import swaydb.java.*
 
-class QuickStartTest {
+import java.time.Duration
 
-    @Test
-    fun quickStart() {
-        // Create a memory database
-        // val db = memory.Map[Int, String]().get
-        swaydb.kotlin.memory.Map.create<Int, String>(
-                Int::class, String::class).use { db ->
-        
-                    // write 100 key-values atomically
-                    db.put((1..100)
-                            .map { index -> SimpleEntry<Int, String>(index, index.toString()) }
-                            .map { it.key to it.value }
-                            .toMap().toMutableMap())
-        
-                    // Iteration: fetch all key-values withing range 10 to 90, update values
-                    // and atomically write updated key-values
-                    db
-                            .from(10)
-                            .takeWhile({ item -> item.key <= 90 })
-                            .map({ item -> item.setValue(item.value + "_updated"); item })
-                            .materialize()
-                            .foreach({entry -> db.put(entry)})
-        
-                    // assert the key-values were updated
-                    (10..90)
-                            .map { item -> SimpleEntry<Int, String>(item, db.get(item)) }
-                            .forEach { pair -> assertThat(pair.value.endsWith("_updated"), equalTo(true)) }
-                }
+import swaydb.java.serializers.Default.intSerializer
+
+object QuickStart {
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        //create a memory database.
+        val map = swaydb.java.memory.Map
+                .configWithFunctions(intSerializer(), intSerializer())
+                .init()
+                .get()
+
+        map.put(1, 1).get() //basic put
+        map.get(1).get() //basic get
+        map.expire(1, Duration.ofSeconds(1)).get() //basic expire
+        map.remove(1).get() //basic remove
+
+        //atomic write a Stream of key-value
+        map.put(Stream.range(1, 100).map({item -> KeyVal.create(item) })).get()
+
+        //create a read stream from 10th key-value to 90th, increment values by 1000000 and insert.
+        map
+            .from(10)
+            .takeWhile({ keyVal -> keyVal.key() <= 90 })
+            .map({ keyVal -> KeyVal.create(keyVal.key(), keyVal.value() + 5000000) })
+            .materialize()
+            .flatMap({item -> map.put(item) })
+            .get()
+
+        val function = PureFunction.OnKeyValue<Int, Int, Return.Map<Int>> { key, value, deadline ->
+            if (key < 25) { //remove if key is less than 25
+                Return.remove()
+            } else if (key < 50) { //expire after 2 seconds if key is less than 50
+                Return.expire(Duration.ofSeconds(2))
+            } else if (key < 75) { //update if key is < 75.
+                Return.update(value!! + 10000000)
+            } else { //else do nothing
+                Return.nothing()
+            }
+        }
+
+        map.registerFunction(function) //register the function.
+
+        map.applyFunction(1, 100, function) //apply the function to all key-values ranging 1 to 100.
+
+        //print all key-values to view the update.
+        map
+            .forEach({ item -> System.out.println(item) })
+            .materialize()
+            .get()
+
+        //stop app.
+        System.exit(0)
     }
 }
 ```
