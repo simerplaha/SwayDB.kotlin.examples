@@ -6,7 +6,6 @@ import swaydb.java.Return
 import swaydb.java.Stream
 import swaydb.java.serializers.Default.intSerializer
 import java.time.Duration
-import kotlin.system.exitProcess
 
 object QuickStart {
 
@@ -57,8 +56,5 @@ object QuickStart {
             .forEach { item -> println(item) }
             .materialize()
             .get()
-
-        //stop app.
-        exitProcess(0)
     }
 }
