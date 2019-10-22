@@ -25,11 +25,13 @@ See [QuickStart.kt](/src/main/kotlin/quickstart/QuickStart.kt).
 
 
 ```kotlin
-import swaydb.java.*
-
-import java.time.Duration
-
+import swaydb.java.KeyVal
+import swaydb.java.PureFunction
+import swaydb.java.Return
+import swaydb.java.Stream
 import swaydb.java.serializers.Default.intSerializer
+import java.time.Duration
+import kotlin.system.exitProcess
 
 object QuickStart {
 
@@ -37,9 +39,9 @@ object QuickStart {
     fun main(args: Array<String>) {
         //create a memory database.
         val map = swaydb.java.memory.Map
-                .configWithFunctions(intSerializer(), intSerializer())
-                .init()
-                .get()
+            .configWithFunctions(intSerializer(), intSerializer())
+            .init()
+            .get()
 
         map.put(1, 1).get() //basic put
         map.get(1).get() //basic get
@@ -47,26 +49,27 @@ object QuickStart {
         map.remove(1).get() //basic remove
 
         //atomic write a Stream of key-value
-        map.put(Stream.range(1, 100).map({item -> KeyVal.create(item) })).get()
+        map.put(Stream.range(1, 100).map { item -> KeyVal.create(item) }).get()
 
         //create a read stream from 10th key-value to 90th, increment values by 1000000 and insert.
         map
             .from(10)
-            .takeWhile({ keyVal -> keyVal.key() <= 90 })
-            .map({ keyVal -> KeyVal.create(keyVal.key(), keyVal.value() + 5000000) })
+            .takeWhile { keyVal -> keyVal.key() <= 90 }
+            .map { keyVal -> KeyVal.create(keyVal.key(), keyVal.value() + 5000000) }
             .materialize()
-            .flatMap({item -> map.put(item) })
+            .flatMap { item -> map.put(item) }
             .get()
 
-        val function = PureFunction.OnKeyValue<Int, Int, Return.Map<Int>> { key, value, deadline ->
-            if (key < 25) { //remove if key is less than 25
-                Return.remove()
-            } else if (key < 50) { //expire after 2 seconds if key is less than 50
-                Return.expire(Duration.ofSeconds(2))
-            } else if (key < 75) { //update if key is < 75.
-                Return.update(value!! + 10000000)
-            } else { //else do nothing
-                Return.nothing()
+        val function = PureFunction.OnKeyValue<Int, Int, Return.Map<Int>> { key, value, _ ->
+            when {
+                key < 25 -> //remove if key is less than 25
+                    Return.remove()
+                key < 50 -> //expire after 2 seconds if key is less than 50
+                    Return.expire(Duration.ofSeconds(2))
+                key < 75 -> //update if key is < 75.
+                    Return.update(value!! + 10000000)
+                else -> //else do nothing
+                    Return.nothing()
             }
         }
 
@@ -76,12 +79,12 @@ object QuickStart {
 
         //print all key-values to view the update.
         map
-            .forEach({ item -> System.out.println(item) })
+            .forEach { item -> println(item) }
             .materialize()
             .get()
 
         //stop app.
-        System.exit(0)
+        exitProcess(0)
     }
 }
 ```
