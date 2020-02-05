@@ -57,6 +57,5 @@ object QuickStart {
     map
       .stream()
       .forEach { item -> println(item) }
-      .materialize()
   }
 }

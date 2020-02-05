@@ -69,5 +69,4 @@ map.applyFunction(1, 100, function) //apply the function to all key-values rangi
 map
   .stream()
   .forEach { item -> println(item) }
-  .materialize()
 ```
