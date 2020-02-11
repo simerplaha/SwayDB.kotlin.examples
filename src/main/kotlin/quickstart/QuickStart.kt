@@ -1,6 +1,7 @@
 package quickstart
 
 import swaydb.java.KeyVal
+import swaydb.java.Map
 import swaydb.java.PureFunction
 import swaydb.java.Return
 import swaydb.java.Stream
@@ -10,12 +11,13 @@ import java.time.Duration
 
 object QuickStart {
 
+
   @JvmStatic
   fun main(args: Array<String>) {
     //create a memory database.
-    val map =
+    val map: Map<Int, Int, PureFunction<Int, Int, Return.Map<Int>>> =
       MapConfig
-        .withFunctions(intSerializer(), intSerializer())
+        .withFunctions<Int, Int, PureFunction<Int, Int, Return.Map<Int>>>(intSerializer(), intSerializer())
         .init()
 
     map.put(1, 1) //basic put
