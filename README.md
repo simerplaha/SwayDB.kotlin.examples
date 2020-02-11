@@ -68,5 +68,5 @@ map.applyFunction(1, 100, function) //apply the function to all key-values rangi
 //print all key-values to view the update.
 map
   .stream()
-  .forEach { item -> println(item) }
+  .forEach { println(it) }
 ```

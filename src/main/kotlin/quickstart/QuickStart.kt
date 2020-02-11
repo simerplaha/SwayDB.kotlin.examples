@@ -16,7 +16,7 @@ object QuickStart {
     val map =
       MapConfig
         .withFunctions(intSerializer(), intSerializer())
-        .init();
+        .init()
 
     map.put(1, 1) //basic put
     map.get(1).get() //basic get
@@ -56,6 +56,6 @@ object QuickStart {
     //print all key-values to view the update.
     map
       .stream()
-      .forEach { item -> println(item) }
+      .forEach { println(it) }
   }
 }
