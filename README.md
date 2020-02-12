@@ -25,7 +25,7 @@ See [QuickStart.kt](/src/main/kotlin/quickstart/QuickStart.kt).
 
 
 ```kotlin
-val map =
+val map: Map<Int, Int, PureFunction<Int, Int, Return.Map<Int>>> =
   MapConfig
     .withFunctions(intSerializer(), intSerializer())
     .init();
