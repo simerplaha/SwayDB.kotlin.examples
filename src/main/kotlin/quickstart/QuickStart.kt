@@ -1,7 +1,6 @@
 package quickstart
 
 import swaydb.java.KeyVal
-import swaydb.java.Map
 import swaydb.java.PureFunction
 import swaydb.java.Return
 import swaydb.java.Stream
@@ -15,9 +14,9 @@ object QuickStart {
   @JvmStatic
   fun main(args: Array<String>) {
     //create a memory database.
-    val map: Map<Int, Int, PureFunction<Int, Int, Return.Map<Int>>> =
+    val map =
       MapConfig
-        .withFunctions<Int, Int, PureFunction<Int, Int, Return.Map<Int>>>(intSerializer(), intSerializer())
+        .withFunctions(intSerializer(), intSerializer())
         .init()
 
     map.put(1, 1) //basic put

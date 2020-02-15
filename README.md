@@ -25,10 +25,10 @@ See [QuickStart.kt](/src/main/kotlin/quickstart/QuickStart.kt).
 
 
 ```kotlin
-val map: Map<Int, Int, PureFunction<Int, Int, Return.Map<Int>>> =
+val map =
   MapConfig
-    .withFunctions<Int, Int, PureFunction<Int, Int, Return.Map<Int>>>(intSerializer(), intSerializer())
-    .init();
+    .withFunctions(intSerializer(), intSerializer())
+    .init()
 
 map.put(1, 1) //basic put
 map.get(1).get() //basic get
