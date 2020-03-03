@@ -1,9 +1,7 @@
 package quickstart
 
-import swaydb.java.KeyVal
-import swaydb.java.PureFunction
-import swaydb.java.Return
-import swaydb.java.Stream
+import swaydb.KeyVal
+import swaydb.java.*
 import swaydb.java.memory.MapConfig
 import swaydb.java.serializers.Default.intSerializer
 import java.time.Duration
@@ -29,9 +27,9 @@ object QuickStart {
     //create a memory database.
     val map =
       MapConfig
-        .withFunctions(intSerializer(), intSerializer())
+        .functionsOn(intSerializer(), intSerializer())
         .registerFunction(function)
-        .init()
+        .get()
 
     map.put(1, 1) //basic put
     map.get(1).get() //basic get
