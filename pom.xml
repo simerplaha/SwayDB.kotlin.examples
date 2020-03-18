@@ -15,8 +15,8 @@
     </developers>
     <licenses>
         <license>
-            <name>GNU AFFERO GENERAL PUBLIC LICENSE, Version 3 (AGPL-3.0)</name>
-            <url>http://opensource.org/licenses/AGPL-3.0</url>
+            <name>MIT</name>
+            <url>https://github.com/simerplaha/SwayDB.kotlin.examples/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
