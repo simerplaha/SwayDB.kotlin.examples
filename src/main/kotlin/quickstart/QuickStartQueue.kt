@@ -5,6 +5,7 @@ import swaydb.java.serializers.Default
 import java.time.Duration
 
 object QuickStartQueue {
+
   @JvmStatic
   fun main(args: Array<String>) {
     val queue = QueueConfig.config(Default.intSerializer())

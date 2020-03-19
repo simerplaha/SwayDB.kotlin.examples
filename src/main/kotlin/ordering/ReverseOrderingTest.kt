@@ -6,6 +6,7 @@ import swaydb.java.memory.MapConfig
 import swaydb.java.serializers.Default
 
 internal class ReverseOrderingTest {
+
   @Test
   fun reverse() {
     val map =

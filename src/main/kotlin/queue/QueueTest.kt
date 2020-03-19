@@ -7,6 +7,7 @@ import swaydb.java.serializers.Default
 import java.time.Duration
 
 internal class QueueTest {
+
   @Test
   fun quickStart() {
     val queue =

@@ -11,6 +11,7 @@ import java.time.Duration
 import java.util.*
 
 internal object QuickStartMapFunctions {
+
   @JvmStatic
   fun main(args: Array<String>) {
 
