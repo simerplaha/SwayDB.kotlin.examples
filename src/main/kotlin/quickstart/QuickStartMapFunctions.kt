@@ -1,19 +1,34 @@
 package quickstart
 
 import swaydb.KeyVal
+import swaydb.java.Deadline
+import swaydb.java.PureFunction
+import swaydb.java.Return
 import swaydb.java.Stream
 import swaydb.java.memory.MapConfig
 import swaydb.java.serializers.Default.intSerializer
 import java.time.Duration
+import java.util.*
 
-internal object QuickStartMapSimple {
-
+internal object QuickStartMapFunctions {
   @JvmStatic
   fun main(args: Array<String>) {
-    val map =
-      MapConfig
-        .functionsOff(intSerializer(), intSerializer())
-        .get()
+
+    //create a function that reads key & value and applies modifications
+    val function =
+      PureFunction.OnKeyValue<Int, Int, Return.Map<Int>> { key: Int, value: Int, _: Optional<Deadline?>? ->
+        when {
+          key < 25 -> Return.remove() //remove if key is less than 25
+          key < 50 -> Return.expire(Duration.ofSeconds(2)) //expire after 2 seconds if key is less than 50
+          key < 75 -> Return.update(value + 10000000) //update if key is < 75.
+          else -> Return.nothing() //else do nothing
+        }
+      }
+
+    val map = MapConfig
+      .functionsOn(intSerializer(), intSerializer())
+      .registerFunction(function)
+      .get()
 
     map.put(1, 1) //basic put
     map[1].get() //basic get
@@ -33,6 +48,7 @@ internal object QuickStartMapSimple {
 
     //submit the stream to update the key-values as a single transaction.
     map.put(updatedKeyValues)
+    map.applyFunction(1, 100, function) //apply the function to all key-values ranging 1 to 100.
 
     //print all key-values to view the update.
     map
