@@ -12,16 +12,11 @@
 [build-badge]: https://github.com/simerplaha/SwayDB.kotlin.examples/workflows/Java%20CI/badge.svg
 [build-link]: https://github.com/simerplaha/SwayDB.kotlin.examples/actions?query=workflow%3A%22Java+CI%22
 
-Implements examples demoing [SwayDB](https://github.com/simerplaha/SwayDB)'s Java API.
-
-Requirements
-============
-
-Kotlin 1.3 and later.
+Implements examples demoing [SwayDB](https://github.com/simerplaha/SwayDB)'s API.
 
 ### Quick start example.
 
-See full [QuickStart.kt](/quickstart/QuickStart_Function.kt).
+See full [QuickStart.kt](/src/main/kotlin/quickstart/QuickStartMapSimple.kt).
 
 ```kotlin
 val map =
