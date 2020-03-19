@@ -26,32 +26,30 @@ See full [QuickStart.kt](/quickstart/QuickStart_Function.kt).
 ```kotlin
 val map =
   MapConfig
-    .withFunctions(intSerializer(), intSerializer())
-    .registerFunction(function)
-    .init()
+    .functionsOff(intSerializer(), intSerializer())
+    .get()
 
 map.put(1, 1) //basic put
-map.get(1).get() //basic get
+map[1].get() //basic get
 map.expire(1, Duration.ofSeconds(1)) //basic expire
 map.remove(1) //basic remove
 
 //atomic write a Stream of key-value
-map.put(Stream.range(1, 100).map { item -> KeyVal.create(item) })
+map.put(Stream.range(1, 100).map { KeyVal.create(it) })
 
-//create a read stream from 10th key-value to 90th, increment values by 1000000 and insert.
-val updatedKeyValuesStream =
+//Create a stream that updates all values within range 10 to 90.
+val updatedKeyValues =
   map
     .from(10)
     .stream()
-    .takeWhile { keyVal -> keyVal.key() <= 90 }
-    .map { keyVal -> KeyVal.create(keyVal.key(), keyVal.value() + 5000000) }
+    .takeWhile { it.key() <= 90 }
+    .map { KeyVal.create(it.key(), it.value() + 5000000) }
 
-map.put(updatedKeyValuesStream)
-
-map.applyFunction(1, 100, function) //apply the function to all key-values ranging 1 to 100.
+//submit the stream to update the key-values as a single transaction.
+map.put(updatedKeyValues)
 
 //print all key-values to view the update.
 map
   .stream()
-  .forEach { println(it) }
+  .forEach(::println)
 ```
