@@ -1,6 +1,6 @@
 package quickstart
 
-import swaydb.java.memory.QueueConfig
+import swaydb.java.memory.MemoryQueue
 import swaydb.java.serializers.Default
 import java.time.Duration
 
@@ -8,8 +8,10 @@ object QuickStartQueue {
 
   @JvmStatic
   fun main(args: Array<String>) {
-    val queue = QueueConfig.config(Default.intSerializer())
-      .get()
+    val queue =
+      MemoryQueue
+        .config(Default.intSerializer())
+        .get()
 
     queue.push(1)
     queue.push(2, Duration.ofSeconds(0))

@@ -2,7 +2,7 @@ package quickstart
 
 import swaydb.KeyVal
 import swaydb.java.Stream
-import swaydb.java.memory.MapConfig
+import swaydb.java.memory.MemoryMap
 import swaydb.java.serializers.Default.intSerializer
 import java.time.Duration
 
@@ -11,7 +11,7 @@ internal object QuickStartMapSimple {
   @JvmStatic
   fun main(args: Array<String>) {
     val map =
-      MapConfig
+      MemoryMap
         .functionsOff(intSerializer(), intSerializer())
         .get()
 
@@ -26,8 +26,8 @@ internal object QuickStartMapSimple {
     //Create a stream that updates all values within range 10 to 90.
     val updatedKeyValues =
       map
-        .from(10)
         .stream()
+        .from(10)
         .takeWhile { it.key() <= 90 }
         .map { KeyVal.create(it.key(), it.value() + 5000000) }
 

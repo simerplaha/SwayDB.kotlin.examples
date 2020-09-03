@@ -2,7 +2,7 @@ package queue
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import swaydb.java.memory.QueueConfig
+import swaydb.java.memory.MemoryQueue
 import swaydb.java.serializers.Default
 import java.time.Duration
 
@@ -11,7 +11,8 @@ internal class QueueTest {
   @Test
   fun quickStart() {
     val queue =
-      QueueConfig.config(Default.intSerializer())
+      MemoryQueue
+        .config(Default.intSerializer())
         .get()
 
     queue.push(1)

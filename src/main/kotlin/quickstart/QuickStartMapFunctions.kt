@@ -5,7 +5,7 @@ import swaydb.java.Deadline
 import swaydb.java.PureFunction
 import swaydb.java.Return
 import swaydb.java.Stream
-import swaydb.java.memory.MapConfig
+import swaydb.java.memory.MemoryMap
 import swaydb.java.serializers.Default.intSerializer
 import java.time.Duration
 import java.util.*
@@ -26,10 +26,11 @@ internal object QuickStartMapFunctions {
         }
       }
 
-    val map = MapConfig
-      .functionsOn(intSerializer(), intSerializer())
-      .registerFunction(function)
-      .get()
+    val map =
+      MemoryMap
+        .functionsOn(intSerializer(), intSerializer())
+        .registerFunction(function)
+        .get()
 
     map.put(1, 1) //basic put
     map[1].get() //basic get
@@ -42,8 +43,8 @@ internal object QuickStartMapFunctions {
     //Create a stream that updates all values within range 10 to 90.
     val updatedKeyValues =
       map
-        .from(10)
         .stream()
+        .from(10)
         .takeWhile { it.key() <= 90 }
         .map { KeyVal.create(it.key(), it.value() + 5000000) }
 

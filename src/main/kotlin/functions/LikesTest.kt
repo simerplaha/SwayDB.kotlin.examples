@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import swaydb.java.PureFunction
 import swaydb.java.Return
-import swaydb.java.memory.MapConfig
+import swaydb.java.memory.MemoryMap
 import swaydb.java.serializers.Default
 import java.util.stream.IntStream
 
@@ -20,7 +20,8 @@ internal class LikesTest {
       }
 
     val likesMap =
-      MapConfig.functionsOn(Default.stringSerializer(), Default.intSerializer())
+      MemoryMap
+        .functionsOn(Default.stringSerializer(), Default.intSerializer())
         .registerFunction(incrementLikesFunction)
         .get()
 

@@ -2,7 +2,7 @@ package ordering
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import swaydb.java.memory.MapConfig
+import swaydb.java.memory.MemoryMap
 import swaydb.java.serializers.Default
 
 internal class ReverseOrderingTest {
@@ -10,7 +10,8 @@ internal class ReverseOrderingTest {
   @Test
   fun reverse() {
     val map =
-      MapConfig.functionsOff(Default.intSerializer(), Default.intSerializer()) //provide a typed comparator that reverses ordering
+      MemoryMap
+        .functionsOff(Default.intSerializer(), Default.intSerializer()) //provide a typed comparator that reverses ordering
         .setTypedComparator { key1: Int, key2: Int? -> key1.compareTo(key2!!) * -1 }
         .get()
 
